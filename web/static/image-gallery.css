@@ -1,0 +1,31 @@
+:root{color-scheme:dark;--bg:#070b12;--panel:#0d131d;--line:#202b3b;--text:#eaf1f8;--muted:#8492a7;--cyan:#5eead4}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.6 system-ui,-apple-system,"Noto Sans SC",sans-serif}
+main{max-width:1160px;margin:0 auto;padding:48px 28px 80px}
+.gallery-header{margin-bottom:28px}
+.eyebrow{color:var(--cyan);font-size:12px;letter-spacing:.12em}
+h1{font-size:30px;margin:8px 0 12px}
+.gallery-title{margin:0 0 8px;overflow-wrap:anywhere}
+.gallery-meta{color:var(--muted);font-size:12px;overflow-wrap:anywhere}
+.gallery-count{color:var(--cyan);margin:18px 0 0;font-size:13px}
+.image-card{margin:0 0 28px;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--panel)}
+figcaption{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:16px 20px;border-bottom:1px solid var(--line)}
+figcaption>div{display:flex;align-items:baseline;gap:16px;min-width:0}
+.image-number{color:var(--cyan);font-size:13px;white-space:nowrap}
+.image-name{font:12px/1.6 ui-monospace,monospace;color:var(--muted);overflow-wrap:anywhere}
+.image-original{flex-shrink:0;border:1px solid #5eead466;border-radius:7px;padding:5px 10px;color:var(--cyan);font-size:12px;text-decoration:none}
+.image-original:hover{border-color:var(--cyan);color:var(--text)}
+.image-original:focus-visible{outline:2px solid var(--cyan);outline-offset:3px}
+.image-preview{padding:20px;text-align:center;background:repeating-conic-gradient(#101722 0% 25%,#0d131d 0% 50%) 50%/24px 24px}
+.image-preview img{display:block;max-width:100%;max-height:80vh;width:auto;height:auto;margin:auto;object-fit:contain;border-radius:4px}
+.image-preview img[hidden]{display:none}
+.image-error,.gallery-empty{padding:36px 18px;color:var(--muted)}
+@media(max-width:600px){main{padding:28px 14px 48px}h1{font-size:25px}figcaption{padding:12px;gap:10px}figcaption>div{flex-direction:column;gap:4px}.image-preview{padding:10px}}
+
+.image-fingerprint{padding:22px 26px;border-top:1px solid var(--line,#253246)}
+.image-fingerprint h2{margin:0 0 16px;font-size:16px}
+.image-fingerprint dl{margin:0;display:grid;gap:12px;font-size:14px;line-height:1.75}
+.image-fingerprint dl>div{display:grid;grid-template-columns:100px minmax(0,1fr);gap:12px}
+.image-fingerprint dt{color:#8492a7}
+.image-fingerprint dd{margin:0;overflow-wrap:anywhere;color:#d7e1ee}
+@media(max-width:600px){.image-fingerprint{padding:18px}.image-fingerprint dl>div{grid-template-columns:1fr;gap:2px}}

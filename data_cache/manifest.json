@@ -1,0 +1,52 @@
+{
+  "generator_version": 1,
+  "format": "cache-prefix-recipe-v1",
+  "target_common_prefix_ratio": 0.85,
+  "datasets": {
+    "CI1": {
+      "path": "CI1.jsonl.gz",
+      "records": 500,
+      "target_prompt_tokens": 7500,
+      "common_word_count": 6273,
+      "unique_word_count": 1107,
+      "designed_common_ratio": 0.85,
+      "sha256": "e153e42797d7f873b5a0513648ef95143e4471a7e3d255864607563117bd2b08"
+    },
+    "CI2": {
+      "path": "CI2.jsonl.gz",
+      "records": 500,
+      "target_prompt_tokens": 12000,
+      "common_word_count": 10098,
+      "unique_word_count": 1782,
+      "designed_common_ratio": 0.85,
+      "sha256": "f61bc3a9f62f3adf7bb061140567fa9a61b2c751ede0f0423302a6b1474c5480"
+    },
+    "CI3": {
+      "path": "CI3.jsonl.gz",
+      "records": 500,
+      "target_prompt_tokens": 24000,
+      "common_word_count": 20298,
+      "unique_word_count": 3582,
+      "designed_common_ratio": 0.85,
+      "sha256": "f2beb793fc4fe444e617ff7a999cf35d6bbd78aaaba961d512c3ba87850bc200"
+    },
+    "CI4": {
+      "path": "CI4.jsonl.gz",
+      "records": 500,
+      "target_prompt_tokens": 48000,
+      "common_word_count": 40698,
+      "unique_word_count": 7182,
+      "designed_common_ratio": 0.85,
+      "sha256": "8fb926ca618f47c24f36f410ab51f07f6f721086ed3a523c9949a582409330fe"
+    },
+    "CC1": {
+      "path": "CC1.jsonl.gz",
+      "records": 7300,
+      "target_prompt_tokens": 10000,
+      "common_word_count": 8398,
+      "unique_word_count": 1482,
+      "designed_common_ratio": 0.85,
+      "sha256": "36306012143e6fbf142b5a72d347be7f94b100f1aa881e23d844f1873bc0cd7a"
+    }
+  }
+}

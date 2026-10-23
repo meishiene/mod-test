@@ -1,0 +1,9 @@
+{
+  "model_tokens": ["glm"],
+  "smoke_marker": "GLM-CONTRACT-OK",
+  "thinking_on": {"thinking": {"type": "enabled"}},
+  "thinking_off": {},
+  "tool_name": "lookup_order",
+  "supports_reasoning": true,
+  "reasoning_efforts": ["low", "medium", "high"]
+}

@@ -1,0 +1,1724 @@
+{
+  "suite_id": "KIMI-K3-TEMP-20260909",
+  "title": "Kimi-K3 供应商临时自测案例集",
+  "version": "0.2-temp",
+  "changelog": [
+    "0.2-temp（2026-10-14）：按 K3 官方契约修订——temperature/top_p 正向改用固定值（1 / 0.95）、非固定值改为负向拒绝；thinking 显式形态补 keep=all、关闭项改观察项；需要可见正文的用例输出预算抬到 ≥512；缓存判定改为「命中 probe 占比 ≥80%」；CACHE-HIT-10 更名为 CACHE-HIT-7（实际 7 次探测）。"
+  ],
+  "source_document": "Kimi-K3 供应商自测基线标准 0828",
+  "contract_baseline": "Kimi-K3 官方契约（2026-10-14 复核）",
+  "scope": "接口兼容性（18条）、性能（40条）、缓存（10条）和自测准入，共68条原子案例；不包含 arxivmath、DeepSWE、SWE-Atlas TW/RF、Legal Agent Benchmark 等开源评测集",
+  "official_contract": {
+    "reviewed_at": "2026-10-14",
+    "note": "本清单的取值必须落在 K3 官方契约内；下列参数为固定值，用例只能用固定值做正向、用非固定值做负向，不得把非固定值当合法默认值。",
+    "fixed_params": {
+      "temperature": 1.0,
+      "top_p": 0.95,
+      "n": 1,
+      "presence_penalty": 0,
+      "frequency_penalty": 0
+    },
+    "thinking": {
+      "closable": false,
+      "explicit_form": {
+        "type": "enabled",
+        "keep": "all"
+      },
+      "note": "K3 思考关不掉；显式传 thinking 只接受 {\"type\":\"enabled\",\"keep\":\"all\"}，该参数本身是 K2.x 形态"
+    },
+    "output_limit": {
+      "field": "max_completion_tokens",
+      "default": 131072,
+      "maximum": 1048576
+    },
+    "thinking_token_budget_note": "思考常开且思考 token 计入输出上限：需要可见正文的用例必须给足输出预算（≥512），小预算下「零可见正文」是原厂行为，不是模型缺陷。",
+    "sources": [
+      "https://platform.moonshot.ai/docs/api/models-overview",
+      "https://platform.moonshot.cn/docs/guide/kimi-k3-quickstart",
+      "https://platform.kimi.com/docs/guide/response_format"
+    ]
+  },
+  "common": {
+    "endpoint": "POST /chat/completions",
+    "protocol": "OpenAI Chat Completions，stream=true 时使用 SSE",
+    "required_request_fields": [
+      "model",
+      "messages"
+    ],
+    "required_usage_fields": [
+      "prompt_tokens",
+      "completion_tokens",
+      "cached_tokens"
+    ],
+    "default_stream": true,
+    "default_max_tokens": 512,
+    "default_concurrency": 10,
+    "evidence": [
+      "请求体",
+      "HTTP 状态码",
+      "完整响应/SSE 原文",
+      "usage",
+      "request_id",
+      "耗时",
+      "断言结果"
+    ]
+  },
+  "cases": [
+    {
+      "id": "K3-CONN-001",
+      "category": "基础连通",
+      "priority": "P0",
+      "name": "非流式基础调用",
+      "request": {
+        "stream": false,
+        "messages": [
+          {
+            "role": "user",
+            "content": "只回复 OK"
+          }
+        ],
+        "max_tokens": 512
+      },
+      "assertions": [
+        "HTTP 200",
+        "返回 choices[0].message.content",
+        "usage 含 prompt_tokens、completion_tokens、cached_tokens（cached_tokens 可位于 usage.prompt_tokens_details）",
+        "响应可解析为 JSON",
+        "响应或响应头存在可追溯 request_id"
+      ],
+      "expected": {}
+    },
+    {
+      "id": "K3-CONN-002",
+      "category": "基础连通",
+      "priority": "P0",
+      "name": "流式基础调用",
+      "request": {
+        "stream": true,
+        "messages": [
+          {
+            "role": "user",
+            "content": "请输出三行：A、B、C"
+          }
+        ],
+        "max_tokens": 512
+      },
+      "assertions": [
+        "HTTP 200",
+        "Content-Type 为 text/event-stream 或等价 SSE",
+        "每个 data 事件均为合法 JSON（[DONE] 除外）",
+        "正常收到 [DONE]",
+        "存在 finish_reason=stop 或原厂等价结束语义",
+        "正文可由 delta.content 按序拼接"
+      ],
+      "expected": {}
+    },
+    {
+      "id": "K3-AUTH-001",
+      "category": "认证与错误",
+      "priority": "P0",
+      "name": "无效认证",
+      "request": {
+        "headers": {
+          "Authorization": "Bearer invalid-key"
+        },
+        "stream": false
+      },
+      "assertions": [
+        "HTTP 401",
+        "错误 body 可解析",
+        "错误语义明确为认证失败",
+        "不返回 HTTP 200 伪成功"
+      ],
+      "expected": {
+        "http_status": 401,
+        "error": {
+          "message_contains": [
+            "auth",
+            "key",
+            "unauthorized"
+          ]
+        }
+      }
+    },
+    {
+      "id": "K3-AUTH-002",
+      "category": "认证与错误",
+      "priority": "P0",
+      "name": "限流错误",
+      "request": {
+        "stream": false,
+        "scenario": "在并发/额度受限条件下触发限流"
+      },
+      "assertions": [
+        "HTTP 429",
+        "错误 body 可解析",
+        "语义明确为限流/速率超限",
+        "不把 429 改写为 400 或 500",
+        "如原厂提供 Retry-After，则字段语义一致"
+      ],
+      "expected": {
+        "http_status": 429,
+        "error": {
+          "message_contains": [
+            "rate",
+            "limit",
+            "quota",
+            "too many"
+          ]
+        }
+      }
+    },
+    {
+      "id": "K3-ERR-001",
+      "category": "认证与错误",
+      "priority": "P0",
+      "name": "非法参数校验",
+      "request": {
+        "stream": false,
+        "messages": [
+          {
+            "role": "user",
+            "content": "只回复 OK"
+          }
+        ],
+        "temperature": 2.1,
+        "max_tokens": 16
+      },
+      "assertions": [
+        "HTTP 400",
+        "错误格式和字段语义与原厂一致",
+        "不静默修改 temperature 后返回 200"
+      ],
+      "expected": {
+        "http_status": 400,
+        "error": {
+          "types": [
+            "invalid_request_error",
+            "invalid_request"
+          ],
+          "message_contains": [
+            "temperature"
+          ]
+        }
+      }
+    },
+    {
+      "id": "K3-ERR-002",
+      "category": "认证与错误",
+      "priority": "P0",
+      "name": "非法 messages 类型",
+      "request": {
+        "stream": false,
+        "messages": "not-an-array",
+        "max_tokens": 16
+      },
+      "assertions": [
+        "HTTP 400",
+        "错误格式可解析",
+        "错误指向参数校验而非服务端异常"
+      ],
+      "expected": {
+        "http_status": 400,
+        "error": {
+          "types": [
+            "invalid_request_error",
+            "invalid_request"
+          ]
+        }
+      }
+    },
+    {
+      "id": "K3-THINK-001",
+      "category": "Thinking 模式",
+      "priority": "P0",
+      "name": "Thinking 官方显式形态",
+      "request": {
+        "stream": false,
+        "thinking": {
+          "type": "enabled",
+          "keep": "all"
+        },
+        "messages": [
+          {
+            "role": "user",
+            "content": "计算 918273×817263，并给出简要过程"
+          }
+        ],
+        "max_tokens": 1024
+      },
+      "assertions": [
+        "HTTP 200",
+        "产生 reasoning/thinking 内容或原厂对应字段",
+        "正文与思考内容字段分离且格式稳定",
+        "usage 完整"
+      ],
+      "expected": {}
+    },
+    {
+      "id": "K3-THINK-002",
+      "category": "Thinking 模式",
+      "priority": "P0",
+      "name": "Thinking 不可关闭（观察项）",
+      "request": {
+        "stream": false,
+        "thinking": {
+          "type": "disabled"
+        },
+        "messages": [
+          {
+            "role": "user",
+            "content": "只回复 DISABLED-OK"
+          }
+        ],
+        "max_tokens": 512
+      },
+      "assertions": [
+        "HTTP 400 拒绝（该形态不是 K3 契约），或 HTTP 200 但思考仍产生",
+        "K3 思考关不掉：200 且 reasoning 为空即视为未达标",
+        "若 200，正文与思考内容字段分离且格式稳定",
+        "usage 完整"
+      ],
+      "expected": {}
+    },
+    {
+      "id": "K3-PARAM-001",
+      "category": "采样参数",
+      "priority": "P0",
+      "name": "采样参数固定值正向",
+      "request": {
+        "stream": false,
+        "messages": [
+          {
+            "role": "user",
+            "content": "只回复 PARAM-OK"
+          }
+        ],
+        "temperature": 1.0,
+        "top_p": 0.95,
+        "max_tokens": 512
+      },
+      "assertions": [
+        "HTTP 200",
+        "显式传入原厂固定值 temperature=1、top_p=0.95 被接受，不因传参报错",
+        "正文为 PARAM-OK",
+        "usage 完整且可计量"
+      ],
+      "expected": {}
+    },
+    {
+      "id": "K3-PARAM-002",
+      "category": "采样参数",
+      "priority": "P0",
+      "name": "采样参数非固定值拒绝",
+      "request": {
+        "stream": false,
+        "messages": [
+          {
+            "role": "user",
+            "content": "连续输出编号 1 到 20，每行一个"
+          }
+        ],
+        "temperature": 0.6,
+        "top_p": 0.8,
+        "max_tokens": 512
+      },
+      "assertions": [
+        "HTTP 400",
+        "temperature/top_p 取值域被锁为固定值单点：合法区间内的非固定值（temperature=0.6）同样被拒",
+        "错误语义指向 temperature 或 top_p，不静默改写后返回 200",
+        "错误格式可解析且与原厂一致"
+      ],
+      "expected": {
+        "http_status": 400,
+        "error": {
+          "types": [
+            "invalid_request_error",
+            "invalid_request"
+          ],
+          "message_contains": [
+            "temperature"
+          ]
+        }
+      }
+    },
+    {
+      "id": "K3-STREAM-001",
+      "category": "流式与计量",
+      "priority": "P0",
+      "name": "SSE chunk 字段完整性",
+      "request": {
+        "stream": true,
+        "messages": [
+          {
+            "role": "user",
+            "content": "计算 37×83，并简要说明"
+          }
+        ],
+        "max_tokens": 512
+      },
+      "assertions": [
+        "chunk id/model/object 字段符合原厂",
+        "choices、delta、index 结构可解析",
+        "正文 delta 与 reasoning delta 不串字段",
+        "结束 chunk 的 finish_reason 正确",
+        "[DONE] 只出现一次且在最后"
+      ],
+      "expected": {}
+    },
+    {
+      "id": "K3-STREAM-002",
+      "category": "流式与计量",
+      "priority": "P0",
+      "name": "流式 usage 计量",
+      "request": {
+        "stream": true,
+        "messages": [
+          {
+            "role": "user",
+            "content": "请输出 100 字以内的测试说明"
+          }
+        ],
+        "max_tokens": 512
+      },
+      "assertions": [
+        "流式结束阶段返回 usage 或原厂等价计量方式",
+        "prompt_tokens、completion_tokens、cached_tokens 均存在且为非负数（cached_tokens 可位于 usage.prompt_tokens_details）",
+        "total_tokens 与原厂计量规则一致",
+        "流式拼接正文与非流式正文语义一致"
+      ],
+      "expected": {}
+    },
+    {
+      "id": "K3-JSON-001",
+      "category": "结构化输出",
+      "priority": "P0",
+      "name": "JSON mode",
+      "request": {
+        "stream": false,
+        "response_format": {
+          "type": "json_object"
+        },
+        "messages": [
+          {
+            "role": "user",
+            "content": "返回 JSON：包含 name=K3、passed=true"
+          }
+        ],
+        "max_tokens": 512
+      },
+      "assertions": [
+        "HTTP 200",
+        "message.content 为合法 JSON object",
+        "JSON 可被标准解析器解析",
+        "无 Markdown 代码围栏",
+        "usage 完整"
+      ],
+      "expected": {
+        "http_status": 200,
+        "usage_fields": [
+          "prompt_tokens",
+          "completion_tokens"
+        ],
+        "content_json": true
+      }
+    },
+    {
+      "id": "K3-JSON-002",
+      "category": "结构化输出",
+      "priority": "P0",
+      "name": "response_format 参数校验",
+      "request": {
+        "stream": false,
+        "response_format": {
+          "type": "unsupported_type"
+        },
+        "messages": [
+          {
+            "role": "user",
+            "content": "只回复 OK"
+          }
+        ],
+        "max_tokens": 16
+      },
+      "assertions": [
+        "HTTP 400",
+        "错误语义为不支持的 response_format",
+        "不降级为普通文本成功响应"
+      ],
+      "expected": {
+        "http_status": 400,
+        "error": {
+          "types": [
+            "invalid_request_error",
+            "invalid_request"
+          ],
+          "message_contains": [
+            "format"
+          ]
+        }
+      }
+    },
+    {
+      "id": "K3-TOOL-001",
+      "category": "工具调用",
+      "priority": "P0",
+      "name": "单工具调用闭环",
+      "request": {
+        "stream": false,
+        "tools": [
+          {
+            "type": "function",
+            "function": {
+              "name": "lookup_order",
+              "description": "查询订单",
+              "parameters": {
+                "type": "object",
+                "properties": {
+                  "order_id": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "order_id"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        ],
+        "tool_choice": "required",
+        "messages": [
+          {
+            "role": "user",
+            "content": "查询订单 ORD-000731，必须调用工具"
+          }
+        ],
+        "max_tokens": 1024
+      },
+      "assertions": [
+        "HTTP 200",
+        "返回 tool_calls",
+        "工具名正确",
+        "arguments 为合法 JSON",
+        "参数含 order_id=ORD-000731",
+        "finish_reason=tool_calls 或原厂等价语义"
+      ],
+      "expected": {
+        "http_status": 200,
+        "tool_calls": {
+          "count": 1,
+          "names": [
+            "lookup_order"
+          ],
+          "args": {
+            "order_id": "ORD-000731"
+          }
+        }
+      }
+    },
+    {
+      "id": "K3-TOOL-002",
+      "category": "工具调用",
+      "priority": "P0",
+      "name": "多工具调用",
+      "request": {
+        "stream": false,
+        "scenario": "一次请求声明 lookup_order 与 get_logistics 两个工具并要求同时查询"
+      },
+      "assertions": [
+        "HTTP 200",
+        "返回两个可解析 tool_calls",
+        "每个 name 与 arguments 一一对应",
+        "tool_call_id 唯一且格式稳定",
+        "顺序与原厂一致"
+      ],
+      "expected": {}
+    },
+    {
+      "id": "K3-TOOL-003",
+      "category": "工具调用",
+      "priority": "P0",
+      "name": "并行工具调用与工具结果回传",
+      "request": {
+        "stream": false,
+        "scenario": "助手 tool_calls 后追加两条 role=tool 消息，再请求最终答复"
+      },
+      "assertions": [
+        "支持并行 tool calls",
+        "能接受对应 tool_call_id 的 tool 消息",
+        "最终返回正文而非再次无故调用工具",
+        "多轮消息结构与原厂一致"
+      ],
+      "expected": {}
+    },
+    {
+      "id": "K3-OBS-001",
+      "category": "可观测性",
+      "priority": "P0",
+      "name": "request_id 追踪",
+      "request": {
+        "stream": false,
+        "headers": {
+          "X-Request-ID": "client-trace-001"
+        },
+        "messages": [
+          {
+            "role": "user",
+            "content": "只回复 TRACE-OK"
+          }
+        ],
+        "max_tokens": 512
+      },
+      "assertions": [
+        "响应包含 request_id，或响应头包含可追溯请求标识",
+        "标识非空且单次请求唯一",
+        "日志/服务端可使用该标识定位请求",
+        "客户端传入标识时遵循原厂回显/关联规则"
+      ],
+      "expected": {}
+    },
+    {
+      "id": "K3-TTFT-01",
+      "category": "TTFT",
+      "priority": "P0",
+      "name": "16K 输入 TTFT 第 1 次",
+      "request": {
+        "stream": true,
+        "input_tokens_target": 16000,
+        "max_tokens": 512,
+        "concurrency": 10,
+        "repetition": 1,
+        "batch": "16K-10"
+      },
+      "assertions": [
+        "记录第 1 次首个有效输出 delta 到请求发出的耗时",
+        "输入长度命中 16K 档",
+        "HTTP 200 且 SSE 正常结束",
+        "保存本次请求级明细",
+        "该档汇总 avg ≤ 9703ms、P90 ≤ 18000ms（10 次完成后统一判定）"
+      ],
+      "expected": {}
+    },
+    {
+      "id": "K3-TTFT-02",
+      "category": "TTFT",
+      "priority": "P0",
+      "name": "16K 输入 TTFT 第 2 次",
+      "request": {
+        "stream": true,
+        "input_tokens_target": 16000,
+        "max_tokens": 512,
+        "concurrency": 10,
+        "repetition": 2,
+        "batch": "16K-10"
+      },
+      "assertions": [
+        "记录第 2 次首个有效输出 delta 到请求发出的耗时",
+        "输入长度命中 16K 档",
+        "HTTP 200 且 SSE 正常结束",
+        "保存本次请求级明细",
+        "该档汇总 avg ≤ 9703ms、P90 ≤ 18000ms（10 次完成后统一判定）"
+      ],
+      "expected": {}
+    },
+    {
+      "id": "K3-TTFT-03",
+      "category": "TTFT",
+      "priority": "P0",
+      "name": "16K 输入 TTFT 第 3 次",
+      "request": {
+        "stream": true,
+        "input_tokens_target": 16000,
+        "max_tokens": 512,
+        "concurrency": 10,
+        "repetition": 3,
+        "batch": "16K-10"
+      },
+      "assertions": [
+        "记录第 3 次首个有效输出 delta 到请求发出的耗时",
+        "输入长度命中 16K 档",
+        "HTTP 200 且 SSE 正常结束",
+        "保存本次请求级明细",
+        "该档汇总 avg ≤ 9703ms、P90 ≤ 18000ms（10 次完成后统一判定）"
+      ],
+      "expected": {}
+    },
+    {
+      "id": "K3-TTFT-04",
+      "category": "TTFT",
+      "priority": "P0",
+      "name": "16K 输入 TTFT 第 4 次",
+      "request": {
+        "stream": true,
+        "input_tokens_target": 16000,
+        "max_tokens": 512,
+        "concurrency": 10,
+        "repetition": 4,
+        "batch": "16K-10"
+      },
+      "assertions": [
+        "记录第 4 次首个有效输出 delta 到请求发出的耗时",
+        "输入长度命中 16K 档",
+        "HTTP 200 且 SSE 正常结束",
+        "保存本次请求级明细",
+        "该档汇总 avg ≤ 9703ms、P90 ≤ 18000ms（10 次完成后统一判定）"
+      ],
+      "expected": {}
+    },
+    {
+      "id": "K3-TTFT-05",
+      "category": "TTFT",
+      "priority": "P0",
+      "name": "16K 输入 TTFT 第 5 次",
+      "request": {
+        "stream": true,
+        "input_tokens_target": 16000,
+        "max_tokens": 512,
+        "concurrency": 10,
+        "repetition": 5,
+        "batch": "16K-10"
+      },
+      "assertions": [
+        "记录第 5 次首个有效输出 delta 到请求发出的耗时",
+        "输入长度命中 16K 档",
+        "HTTP 200 且 SSE 正常结束",
+        "保存本次请求级明细",
+        "该档汇总 avg ≤ 9703ms、P90 ≤ 18000ms（10 次完成后统一判定）"
+      ],
+      "expected": {}
+    },
+    {
+      "id": "K3-TTFT-06",
+      "category": "TTFT",
+      "priority": "P0",
+      "name": "16K 输入 TTFT 第 6 次",
+      "request": {
+        "stream": true,
+        "input_tokens_target": 16000,
+        "max_tokens": 512,
+        "concurrency": 10,
+        "repetition": 6,
+        "batch": "16K-10"
+      },
+      "assertions": [
+        "记录第 6 次首个有效输出 delta 到请求发出的耗时",
+        "输入长度命中 16K 档",
+        "HTTP 200 且 SSE 正常结束",
+        "保存本次请求级明细",
+        "该档汇总 avg ≤ 9703ms、P90 ≤ 18000ms（10 次完成后统一判定）"
+      ],
+      "expected": {}
+    },
+    {
+      "id": "K3-TTFT-07",
+      "category": "TTFT",
+      "priority": "P0",
+      "name": "16K 输入 TTFT 第 7 次",
+      "request": {
+        "stream": true,
+        "input_tokens_target": 16000,
+        "max_tokens": 512,
+        "concurrency": 10,
+        "repetition": 7,
+        "batch": "16K-10"
+      },
+      "assertions": [
+        "记录第 7 次首个有效输出 delta 到请求发出的耗时",
+        "输入长度命中 16K 档",
+        "HTTP 200 且 SSE 正常结束",
+        "保存本次请求级明细",
+        "该档汇总 avg ≤ 9703ms、P90 ≤ 18000ms（10 次完成后统一判定）"
+      ],
+      "expected": {}
+    },
+    {
+      "id": "K3-TTFT-08",
+      "category": "TTFT",
+      "priority": "P0",
+      "name": "16K 输入 TTFT 第 8 次",
+      "request": {
+        "stream": true,
+        "input_tokens_target": 16000,
+        "max_tokens": 512,
+        "concurrency": 10,
+        "repetition": 8,
+        "batch": "16K-10"
+      },
+      "assertions": [
+        "记录第 8 次首个有效输出 delta 到请求发出的耗时",
+        "输入长度命中 16K 档",
+        "HTTP 200 且 SSE 正常结束",
+        "保存本次请求级明细",
+        "该档汇总 avg ≤ 9703ms、P90 ≤ 18000ms（10 次完成后统一判定）"
+      ],
+      "expected": {}
+    },
+    {
+      "id": "K3-TTFT-09",
+      "category": "TTFT",
+      "priority": "P0",
+      "name": "16K 输入 TTFT 第 9 次",
+      "request": {
+        "stream": true,
+        "input_tokens_target": 16000,
+        "max_tokens": 512,
+        "concurrency": 10,
+        "repetition": 9,
+        "batch": "16K-10"
+      },
+      "assertions": [
+        "记录第 9 次首个有效输出 delta 到请求发出的耗时",
+        "输入长度命中 16K 档",
+        "HTTP 200 且 SSE 正常结束",
+        "保存本次请求级明细",
+        "该档汇总 avg ≤ 9703ms、P90 ≤ 18000ms（10 次完成后统一判定）"
+      ],
+      "expected": {}
+    },
+    {
+      "id": "K3-TTFT-10",
+      "category": "TTFT",
+      "priority": "P0",
+      "name": "16K 输入 TTFT 第 10 次",
+      "request": {
+        "stream": true,
+        "input_tokens_target": 16000,
+        "max_tokens": 512,
+        "concurrency": 10,
+        "repetition": 10,
+        "batch": "16K-10"
+      },
+      "assertions": [
+        "记录第 10 次首个有效输出 delta 到请求发出的耗时",
+        "输入长度命中 16K 档",
+        "HTTP 200 且 SSE 正常结束",
+        "保存本次请求级明细",
+        "该档汇总 avg ≤ 9703ms、P90 ≤ 18000ms（10 次完成后统一判定）"
+      ],
+      "expected": {}
+    },
+    {
+      "id": "K3-TTFT-11",
+      "category": "TTFT",
+      "priority": "P0",
+      "name": "64K 输入 TTFT 第 1 次",
+      "request": {
+        "stream": true,
+        "input_tokens_target": 64000,
+        "max_tokens": 512,
+        "concurrency": 10,
+        "repetition": 1,
+        "batch": "64K-10"
+      },
+      "assertions": [
+        "记录第 1 次首个有效输出 delta 到请求发出的耗时",
+        "输入长度命中 64K 档",
+        "HTTP 200 且 SSE 正常结束",
+        "保存本次请求级明细",
+        "该档汇总 avg ≤ 8303ms、P90 ≤ 15000ms（10 次完成后统一判定）"
+      ],
+      "expected": {}
+    },
+    {
+      "id": "K3-TTFT-12",
+      "category": "TTFT",
+      "priority": "P0",
+      "name": "64K 输入 TTFT 第 2 次",
+      "request": {
+        "stream": true,
+        "input_tokens_target": 64000,
+        "max_tokens": 512,
+        "concurrency": 10,
+        "repetition": 2,
+        "batch": "64K-10"
+      },
+      "assertions": [
+        "记录第 2 次首个有效输出 delta 到请求发出的耗时",
+        "输入长度命中 64K 档",
+        "HTTP 200 且 SSE 正常结束",
+        "保存本次请求级明细",
+        "该档汇总 avg ≤ 8303ms、P90 ≤ 15000ms（10 次完成后统一判定）"
+      ],
+      "expected": {}
+    },
+    {
+      "id": "K3-TTFT-13",
+      "category": "TTFT",
+      "priority": "P0",
+      "name": "64K 输入 TTFT 第 3 次",
+      "request": {
+        "stream": true,
+        "input_tokens_target": 64000,
+        "max_tokens": 512,
+        "concurrency": 10,
+        "repetition": 3,
+        "batch": "64K-10"
+      },
+      "assertions": [
+        "记录第 3 次首个有效输出 delta 到请求发出的耗时",
+        "输入长度命中 64K 档",
+        "HTTP 200 且 SSE 正常结束",
+        "保存本次请求级明细",
+        "该档汇总 avg ≤ 8303ms、P90 ≤ 15000ms（10 次完成后统一判定）"
+      ],
+      "expected": {}
+    },
+    {
+      "id": "K3-TTFT-14",
+      "category": "TTFT",
+      "priority": "P0",
+      "name": "64K 输入 TTFT 第 4 次",
+      "request": {
+        "stream": true,
+        "input_tokens_target": 64000,
+        "max_tokens": 512,
+        "concurrency": 10,
+        "repetition": 4,
+        "batch": "64K-10"
+      },
+      "assertions": [
+        "记录第 4 次首个有效输出 delta 到请求发出的耗时",
+        "输入长度命中 64K 档",
+        "HTTP 200 且 SSE 正常结束",
+        "保存本次请求级明细",
+        "该档汇总 avg ≤ 8303ms、P90 ≤ 15000ms（10 次完成后统一判定）"
+      ],
+      "expected": {}
+    },
+    {
+      "id": "K3-TTFT-15",
+      "category": "TTFT",
+      "priority": "P0",
+      "name": "64K 输入 TTFT 第 5 次",
+      "request": {
+        "stream": true,
+        "input_tokens_target": 64000,
+        "max_tokens": 512,
+        "concurrency": 10,
+        "repetition": 5,
+        "batch": "64K-10"
+      },
+      "assertions": [
+        "记录第 5 次首个有效输出 delta 到请求发出的耗时",
+        "输入长度命中 64K 档",
+        "HTTP 200 且 SSE 正常结束",
+        "保存本次请求级明细",
+        "该档汇总 avg ≤ 8303ms、P90 ≤ 15000ms（10 次完成后统一判定）"
+      ],
+      "expected": {}
+    },
+    {
+      "id": "K3-TTFT-16",
+      "category": "TTFT",
+      "priority": "P0",
+      "name": "64K 输入 TTFT 第 6 次",
+      "request": {
+        "stream": true,
+        "input_tokens_target": 64000,
+        "max_tokens": 512,
+        "concurrency": 10,
+        "repetition": 6,
+        "batch": "64K-10"
+      },
+      "assertions": [
+        "记录第 6 次首个有效输出 delta 到请求发出的耗时",
+        "输入长度命中 64K 档",
+        "HTTP 200 且 SSE 正常结束",
+        "保存本次请求级明细",
+        "该档汇总 avg ≤ 8303ms、P90 ≤ 15000ms（10 次完成后统一判定）"
+      ],
+      "expected": {}
+    },
+    {
+      "id": "K3-TTFT-17",
+      "category": "TTFT",
+      "priority": "P0",
+      "name": "64K 输入 TTFT 第 7 次",
+      "request": {
+        "stream": true,
+        "input_tokens_target": 64000,
+        "max_tokens": 512,
+        "concurrency": 10,
+        "repetition": 7,
+        "batch": "64K-10"
+      },
+      "assertions": [
+        "记录第 7 次首个有效输出 delta 到请求发出的耗时",
+        "输入长度命中 64K 档",
+        "HTTP 200 且 SSE 正常结束",
+        "保存本次请求级明细",
+        "该档汇总 avg ≤ 8303ms、P90 ≤ 15000ms（10 次完成后统一判定）"
+      ],
+      "expected": {}
+    },
+    {
+      "id": "K3-TTFT-18",
+      "category": "TTFT",
+      "priority": "P0",
+      "name": "64K 输入 TTFT 第 8 次",
+      "request": {
+        "stream": true,
+        "input_tokens_target": 64000,
+        "max_tokens": 512,
+        "concurrency": 10,
+        "repetition": 8,
+        "batch": "64K-10"
+      },
+      "assertions": [
+        "记录第 8 次首个有效输出 delta 到请求发出的耗时",
+        "输入长度命中 64K 档",
+        "HTTP 200 且 SSE 正常结束",
+        "保存本次请求级明细",
+        "该档汇总 avg ≤ 8303ms、P90 ≤ 15000ms（10 次完成后统一判定）"
+      ],
+      "expected": {}
+    },
+    {
+      "id": "K3-TTFT-19",
+      "category": "TTFT",
+      "priority": "P0",
+      "name": "64K 输入 TTFT 第 9 次",
+      "request": {
+        "stream": true,
+        "input_tokens_target": 64000,
+        "max_tokens": 512,
+        "concurrency": 10,
+        "repetition": 9,
+        "batch": "64K-10"
+      },
+      "assertions": [
+        "记录第 9 次首个有效输出 delta 到请求发出的耗时",
+        "输入长度命中 64K 档",
+        "HTTP 200 且 SSE 正常结束",
+        "保存本次请求级明细",
+        "该档汇总 avg ≤ 8303ms、P90 ≤ 15000ms（10 次完成后统一判定）"
+      ],
+      "expected": {}
+    },
+    {
+      "id": "K3-TTFT-20",
+      "category": "TTFT",
+      "priority": "P0",
+      "name": "64K 输入 TTFT 第 10 次",
+      "request": {
+        "stream": true,
+        "input_tokens_target": 64000,
+        "max_tokens": 512,
+        "concurrency": 10,
+        "repetition": 10,
+        "batch": "64K-10"
+      },
+      "assertions": [
+        "记录第 10 次首个有效输出 delta 到请求发出的耗时",
+        "输入长度命中 64K 档",
+        "HTTP 200 且 SSE 正常结束",
+        "保存本次请求级明细",
+        "该档汇总 avg ≤ 8303ms、P90 ≤ 15000ms（10 次完成后统一判定）"
+      ],
+      "expected": {}
+    },
+    {
+      "id": "K3-TTFT-21",
+      "category": "TTFT",
+      "priority": "P0",
+      "name": "100K 输入 TTFT 第 1 次",
+      "request": {
+        "stream": true,
+        "input_tokens_target": 100000,
+        "max_tokens": 512,
+        "concurrency": 10,
+        "repetition": 1,
+        "batch": "100K-10"
+      },
+      "assertions": [
+        "记录第 1 次首个有效输出 delta 到请求发出的耗时",
+        "输入长度命中 100K 档",
+        "HTTP 200 且 SSE 正常结束",
+        "保存本次请求级明细",
+        "该档汇总 avg ≤ 8190ms、P90 ≤ 15750ms（10 次完成后统一判定）"
+      ],
+      "expected": {}
+    },
+    {
+      "id": "K3-TTFT-22",
+      "category": "TTFT",
+      "priority": "P0",
+      "name": "100K 输入 TTFT 第 2 次",
+      "request": {
+        "stream": true,
+        "input_tokens_target": 100000,
+        "max_tokens": 512,
+        "concurrency": 10,
+        "repetition": 2,
+        "batch": "100K-10"
+      },
+      "assertions": [
+        "记录第 2 次首个有效输出 delta 到请求发出的耗时",
+        "输入长度命中 100K 档",
+        "HTTP 200 且 SSE 正常结束",
+        "保存本次请求级明细",
+        "该档汇总 avg ≤ 8190ms、P90 ≤ 15750ms（10 次完成后统一判定）"
+      ],
+      "expected": {}
+    },
+    {
+      "id": "K3-TTFT-23",
+      "category": "TTFT",
+      "priority": "P0",
+      "name": "100K 输入 TTFT 第 3 次",
+      "request": {
+        "stream": true,
+        "input_tokens_target": 100000,
+        "max_tokens": 512,
+        "concurrency": 10,
+        "repetition": 3,
+        "batch": "100K-10"
+      },
+      "assertions": [
+        "记录第 3 次首个有效输出 delta 到请求发出的耗时",
+        "输入长度命中 100K 档",
+        "HTTP 200 且 SSE 正常结束",
+        "保存本次请求级明细",
+        "该档汇总 avg ≤ 8190ms、P90 ≤ 15750ms（10 次完成后统一判定）"
+      ],
+      "expected": {}
+    },
+    {
+      "id": "K3-TTFT-24",
+      "category": "TTFT",
+      "priority": "P0",
+      "name": "100K 输入 TTFT 第 4 次",
+      "request": {
+        "stream": true,
+        "input_tokens_target": 100000,
+        "max_tokens": 512,
+        "concurrency": 10,
+        "repetition": 4,
+        "batch": "100K-10"
+      },
+      "assertions": [
+        "记录第 4 次首个有效输出 delta 到请求发出的耗时",
+        "输入长度命中 100K 档",
+        "HTTP 200 且 SSE 正常结束",
+        "保存本次请求级明细",
+        "该档汇总 avg ≤ 8190ms、P90 ≤ 15750ms（10 次完成后统一判定）"
+      ],
+      "expected": {}
+    },
+    {
+      "id": "K3-TTFT-25",
+      "category": "TTFT",
+      "priority": "P0",
+      "name": "100K 输入 TTFT 第 5 次",
+      "request": {
+        "stream": true,
+        "input_tokens_target": 100000,
+        "max_tokens": 512,
+        "concurrency": 10,
+        "repetition": 5,
+        "batch": "100K-10"
+      },
+      "assertions": [
+        "记录第 5 次首个有效输出 delta 到请求发出的耗时",
+        "输入长度命中 100K 档",
+        "HTTP 200 且 SSE 正常结束",
+        "保存本次请求级明细",
+        "该档汇总 avg ≤ 8190ms、P90 ≤ 15750ms（10 次完成后统一判定）"
+      ],
+      "expected": {}
+    },
+    {
+      "id": "K3-TTFT-26",
+      "category": "TTFT",
+      "priority": "P0",
+      "name": "100K 输入 TTFT 第 6 次",
+      "request": {
+        "stream": true,
+        "input_tokens_target": 100000,
+        "max_tokens": 512,
+        "concurrency": 10,
+        "repetition": 6,
+        "batch": "100K-10"
+      },
+      "assertions": [
+        "记录第 6 次首个有效输出 delta 到请求发出的耗时",
+        "输入长度命中 100K 档",
+        "HTTP 200 且 SSE 正常结束",
+        "保存本次请求级明细",
+        "该档汇总 avg ≤ 8190ms、P90 ≤ 15750ms（10 次完成后统一判定）"
+      ],
+      "expected": {}
+    },
+    {
+      "id": "K3-TTFT-27",
+      "category": "TTFT",
+      "priority": "P0",
+      "name": "100K 输入 TTFT 第 7 次",
+      "request": {
+        "stream": true,
+        "input_tokens_target": 100000,
+        "max_tokens": 512,
+        "concurrency": 10,
+        "repetition": 7,
+        "batch": "100K-10"
+      },
+      "assertions": [
+        "记录第 7 次首个有效输出 delta 到请求发出的耗时",
+        "输入长度命中 100K 档",
+        "HTTP 200 且 SSE 正常结束",
+        "保存本次请求级明细",
+        "该档汇总 avg ≤ 8190ms、P90 ≤ 15750ms（10 次完成后统一判定）"
+      ],
+      "expected": {}
+    },
+    {
+      "id": "K3-TTFT-28",
+      "category": "TTFT",
+      "priority": "P0",
+      "name": "100K 输入 TTFT 第 8 次",
+      "request": {
+        "stream": true,
+        "input_tokens_target": 100000,
+        "max_tokens": 512,
+        "concurrency": 10,
+        "repetition": 8,
+        "batch": "100K-10"
+      },
+      "assertions": [
+        "记录第 8 次首个有效输出 delta 到请求发出的耗时",
+        "输入长度命中 100K 档",
+        "HTTP 200 且 SSE 正常结束",
+        "保存本次请求级明细",
+        "该档汇总 avg ≤ 8190ms、P90 ≤ 15750ms（10 次完成后统一判定）"
+      ],
+      "expected": {}
+    },
+    {
+      "id": "K3-TTFT-29",
+      "category": "TTFT",
+      "priority": "P0",
+      "name": "100K 输入 TTFT 第 9 次",
+      "request": {
+        "stream": true,
+        "input_tokens_target": 100000,
+        "max_tokens": 512,
+        "concurrency": 10,
+        "repetition": 9,
+        "batch": "100K-10"
+      },
+      "assertions": [
+        "记录第 9 次首个有效输出 delta 到请求发出的耗时",
+        "输入长度命中 100K 档",
+        "HTTP 200 且 SSE 正常结束",
+        "保存本次请求级明细",
+        "该档汇总 avg ≤ 8190ms、P90 ≤ 15750ms（10 次完成后统一判定）"
+      ],
+      "expected": {}
+    },
+    {
+      "id": "K3-TTFT-30",
+      "category": "TTFT",
+      "priority": "P0",
+      "name": "100K 输入 TTFT 第 10 次",
+      "request": {
+        "stream": true,
+        "input_tokens_target": 100000,
+        "max_tokens": 512,
+        "concurrency": 10,
+        "repetition": 10,
+        "batch": "100K-10"
+      },
+      "assertions": [
+        "记录第 10 次首个有效输出 delta 到请求发出的耗时",
+        "输入长度命中 100K 档",
+        "HTTP 200 且 SSE 正常结束",
+        "保存本次请求级明细",
+        "该档汇总 avg ≤ 8190ms、P90 ≤ 15750ms（10 次完成后统一判定）"
+      ],
+      "expected": {}
+    },
+    {
+      "id": "K3-TPOT-01",
+      "category": "TPOT",
+      "priority": "P0",
+      "name": "流式生成 TPOT 第 1 次",
+      "request": {
+        "stream": true,
+        "input_tokens_target": 16000,
+        "max_tokens": 512,
+        "concurrency": 10,
+        "repetition": 1,
+        "batch": "TPOT-10"
+      },
+      "assertions": [
+        "HTTP 200 且 SSE 正常结束",
+        "记录首 token 后相邻有效输出 token/delta 的间隔",
+        "排除首 token 等待时间计算 TPOT",
+        "保存本次请求级明细",
+        "10 次汇总需满足 avg ≤22ms/token、P50 ≤18ms/token、P90 ≤36ms/token"
+      ],
+      "expected": {}
+    },
+    {
+      "id": "K3-TPOT-02",
+      "category": "TPOT",
+      "priority": "P0",
+      "name": "流式生成 TPOT 第 2 次",
+      "request": {
+        "stream": true,
+        "input_tokens_target": 16000,
+        "max_tokens": 512,
+        "concurrency": 10,
+        "repetition": 2,
+        "batch": "TPOT-10"
+      },
+      "assertions": [
+        "HTTP 200 且 SSE 正常结束",
+        "记录首 token 后相邻有效输出 token/delta 的间隔",
+        "排除首 token 等待时间计算 TPOT",
+        "保存本次请求级明细",
+        "10 次汇总需满足 avg ≤22ms/token、P50 ≤18ms/token、P90 ≤36ms/token"
+      ],
+      "expected": {}
+    },
+    {
+      "id": "K3-TPOT-03",
+      "category": "TPOT",
+      "priority": "P0",
+      "name": "流式生成 TPOT 第 3 次",
+      "request": {
+        "stream": true,
+        "input_tokens_target": 16000,
+        "max_tokens": 512,
+        "concurrency": 10,
+        "repetition": 3,
+        "batch": "TPOT-10"
+      },
+      "assertions": [
+        "HTTP 200 且 SSE 正常结束",
+        "记录首 token 后相邻有效输出 token/delta 的间隔",
+        "排除首 token 等待时间计算 TPOT",
+        "保存本次请求级明细",
+        "10 次汇总需满足 avg ≤22ms/token、P50 ≤18ms/token、P90 ≤36ms/token"
+      ],
+      "expected": {}
+    },
+    {
+      "id": "K3-TPOT-04",
+      "category": "TPOT",
+      "priority": "P0",
+      "name": "流式生成 TPOT 第 4 次",
+      "request": {
+        "stream": true,
+        "input_tokens_target": 16000,
+        "max_tokens": 512,
+        "concurrency": 10,
+        "repetition": 4,
+        "batch": "TPOT-10"
+      },
+      "assertions": [
+        "HTTP 200 且 SSE 正常结束",
+        "记录首 token 后相邻有效输出 token/delta 的间隔",
+        "排除首 token 等待时间计算 TPOT",
+        "保存本次请求级明细",
+        "10 次汇总需满足 avg ≤22ms/token、P50 ≤18ms/token、P90 ≤36ms/token"
+      ],
+      "expected": {}
+    },
+    {
+      "id": "K3-TPOT-05",
+      "category": "TPOT",
+      "priority": "P0",
+      "name": "流式生成 TPOT 第 5 次",
+      "request": {
+        "stream": true,
+        "input_tokens_target": 16000,
+        "max_tokens": 512,
+        "concurrency": 10,
+        "repetition": 5,
+        "batch": "TPOT-10"
+      },
+      "assertions": [
+        "HTTP 200 且 SSE 正常结束",
+        "记录首 token 后相邻有效输出 token/delta 的间隔",
+        "排除首 token 等待时间计算 TPOT",
+        "保存本次请求级明细",
+        "10 次汇总需满足 avg ≤22ms/token、P50 ≤18ms/token、P90 ≤36ms/token"
+      ],
+      "expected": {}
+    },
+    {
+      "id": "K3-TPOT-06",
+      "category": "TPOT",
+      "priority": "P0",
+      "name": "流式生成 TPOT 第 6 次",
+      "request": {
+        "stream": true,
+        "input_tokens_target": 16000,
+        "max_tokens": 512,
+        "concurrency": 10,
+        "repetition": 6,
+        "batch": "TPOT-10"
+      },
+      "assertions": [
+        "HTTP 200 且 SSE 正常结束",
+        "记录首 token 后相邻有效输出 token/delta 的间隔",
+        "排除首 token 等待时间计算 TPOT",
+        "保存本次请求级明细",
+        "10 次汇总需满足 avg ≤22ms/token、P50 ≤18ms/token、P90 ≤36ms/token"
+      ],
+      "expected": {}
+    },
+    {
+      "id": "K3-TPOT-07",
+      "category": "TPOT",
+      "priority": "P0",
+      "name": "流式生成 TPOT 第 7 次",
+      "request": {
+        "stream": true,
+        "input_tokens_target": 16000,
+        "max_tokens": 512,
+        "concurrency": 10,
+        "repetition": 7,
+        "batch": "TPOT-10"
+      },
+      "assertions": [
+        "HTTP 200 且 SSE 正常结束",
+        "记录首 token 后相邻有效输出 token/delta 的间隔",
+        "排除首 token 等待时间计算 TPOT",
+        "保存本次请求级明细",
+        "10 次汇总需满足 avg ≤22ms/token、P50 ≤18ms/token、P90 ≤36ms/token"
+      ],
+      "expected": {}
+    },
+    {
+      "id": "K3-TPOT-08",
+      "category": "TPOT",
+      "priority": "P0",
+      "name": "流式生成 TPOT 第 8 次",
+      "request": {
+        "stream": true,
+        "input_tokens_target": 16000,
+        "max_tokens": 512,
+        "concurrency": 10,
+        "repetition": 8,
+        "batch": "TPOT-10"
+      },
+      "assertions": [
+        "HTTP 200 且 SSE 正常结束",
+        "记录首 token 后相邻有效输出 token/delta 的间隔",
+        "排除首 token 等待时间计算 TPOT",
+        "保存本次请求级明细",
+        "10 次汇总需满足 avg ≤22ms/token、P50 ≤18ms/token、P90 ≤36ms/token"
+      ],
+      "expected": {}
+    },
+    {
+      "id": "K3-TPOT-09",
+      "category": "TPOT",
+      "priority": "P0",
+      "name": "流式生成 TPOT 第 9 次",
+      "request": {
+        "stream": true,
+        "input_tokens_target": 16000,
+        "max_tokens": 512,
+        "concurrency": 10,
+        "repetition": 9,
+        "batch": "TPOT-10"
+      },
+      "assertions": [
+        "HTTP 200 且 SSE 正常结束",
+        "记录首 token 后相邻有效输出 token/delta 的间隔",
+        "排除首 token 等待时间计算 TPOT",
+        "保存本次请求级明细",
+        "10 次汇总需满足 avg ≤22ms/token、P50 ≤18ms/token、P90 ≤36ms/token"
+      ],
+      "expected": {}
+    },
+    {
+      "id": "K3-TPOT-10",
+      "category": "TPOT",
+      "priority": "P0",
+      "name": "流式生成 TPOT 第 10 次",
+      "request": {
+        "stream": true,
+        "input_tokens_target": 16000,
+        "max_tokens": 512,
+        "concurrency": 10,
+        "repetition": 10,
+        "batch": "TPOT-10"
+      },
+      "assertions": [
+        "HTTP 200 且 SSE 正常结束",
+        "记录首 token 后相邻有效输出 token/delta 的间隔",
+        "排除首 token 等待时间计算 TPOT",
+        "保存本次请求级明细",
+        "10 次汇总需满足 avg ≤22ms/token、P50 ≤18ms/token、P90 ≤36ms/token"
+      ],
+      "expected": {}
+    },
+    {
+      "id": "K3-CACHE-HIT-01",
+      "category": "缓存",
+      "priority": "P0",
+      "name": "90% 稳定前缀命中探测第 1 次",
+      "request": {
+        "phase": "probe",
+        "wait_seconds": 0,
+        "warm_input_tokens_target": 70000,
+        "same_prefix_byte_exact": true,
+        "append_tail": true,
+        "repetition": 1,
+        "batch": "CACHE-HIT-7"
+      },
+      "assertions": [
+        "warm 请求已完成且稳定前缀 byte-exact 保持不变",
+        "记录每次 probe 的 prompt_tokens 与 cached_tokens（缺字段按未命中计）",
+        "保存本次 warm/probe 关联信息",
+        "该档命中率：cached_tokens / prompt_tokens ≥80% 的 probe 占比 ≥80%（7 次完成后统一判定）"
+      ],
+      "expected": {}
+    },
+    {
+      "id": "K3-CACHE-HIT-02",
+      "category": "缓存",
+      "priority": "P0",
+      "name": "90% 稳定前缀命中探测第 2 次",
+      "request": {
+        "phase": "probe",
+        "wait_seconds": 0,
+        "warm_input_tokens_target": 70000,
+        "same_prefix_byte_exact": true,
+        "append_tail": true,
+        "repetition": 2,
+        "batch": "CACHE-HIT-7"
+      },
+      "assertions": [
+        "warm 请求已完成且稳定前缀 byte-exact 保持不变",
+        "记录每次 probe 的 prompt_tokens 与 cached_tokens（缺字段按未命中计）",
+        "保存本次 warm/probe 关联信息",
+        "该档命中率：cached_tokens / prompt_tokens ≥80% 的 probe 占比 ≥80%（7 次完成后统一判定）"
+      ],
+      "expected": {}
+    },
+    {
+      "id": "K3-CACHE-HIT-03",
+      "category": "缓存",
+      "priority": "P0",
+      "name": "90% 稳定前缀命中探测第 3 次",
+      "request": {
+        "phase": "probe",
+        "wait_seconds": 0,
+        "warm_input_tokens_target": 70000,
+        "same_prefix_byte_exact": true,
+        "append_tail": true,
+        "repetition": 3,
+        "batch": "CACHE-HIT-7"
+      },
+      "assertions": [
+        "warm 请求已完成且稳定前缀 byte-exact 保持不变",
+        "记录每次 probe 的 prompt_tokens 与 cached_tokens（缺字段按未命中计）",
+        "保存本次 warm/probe 关联信息",
+        "该档命中率：cached_tokens / prompt_tokens ≥80% 的 probe 占比 ≥80%（7 次完成后统一判定）"
+      ],
+      "expected": {}
+    },
+    {
+      "id": "K3-CACHE-HIT-04",
+      "category": "缓存",
+      "priority": "P0",
+      "name": "90% 稳定前缀命中探测第 4 次",
+      "request": {
+        "phase": "probe",
+        "wait_seconds": 0,
+        "warm_input_tokens_target": 70000,
+        "same_prefix_byte_exact": true,
+        "append_tail": true,
+        "repetition": 4,
+        "batch": "CACHE-HIT-7"
+      },
+      "assertions": [
+        "warm 请求已完成且稳定前缀 byte-exact 保持不变",
+        "记录每次 probe 的 prompt_tokens 与 cached_tokens（缺字段按未命中计）",
+        "保存本次 warm/probe 关联信息",
+        "该档命中率：cached_tokens / prompt_tokens ≥80% 的 probe 占比 ≥80%（7 次完成后统一判定）"
+      ],
+      "expected": {}
+    },
+    {
+      "id": "K3-CACHE-HIT-05",
+      "category": "缓存",
+      "priority": "P0",
+      "name": "90% 稳定前缀命中探测第 5 次",
+      "request": {
+        "phase": "probe",
+        "wait_seconds": 0,
+        "warm_input_tokens_target": 70000,
+        "same_prefix_byte_exact": true,
+        "append_tail": true,
+        "repetition": 5,
+        "batch": "CACHE-HIT-7"
+      },
+      "assertions": [
+        "warm 请求已完成且稳定前缀 byte-exact 保持不变",
+        "记录每次 probe 的 prompt_tokens 与 cached_tokens（缺字段按未命中计）",
+        "保存本次 warm/probe 关联信息",
+        "该档命中率：cached_tokens / prompt_tokens ≥80% 的 probe 占比 ≥80%（7 次完成后统一判定）"
+      ],
+      "expected": {}
+    },
+    {
+      "id": "K3-CACHE-HIT-06",
+      "category": "缓存",
+      "priority": "P0",
+      "name": "90% 稳定前缀命中探测第 6 次",
+      "request": {
+        "phase": "probe",
+        "wait_seconds": 0,
+        "warm_input_tokens_target": 70000,
+        "same_prefix_byte_exact": true,
+        "append_tail": true,
+        "repetition": 6,
+        "batch": "CACHE-HIT-7"
+      },
+      "assertions": [
+        "warm 请求已完成且稳定前缀 byte-exact 保持不变",
+        "记录每次 probe 的 prompt_tokens 与 cached_tokens（缺字段按未命中计）",
+        "保存本次 warm/probe 关联信息",
+        "该档命中率：cached_tokens / prompt_tokens ≥80% 的 probe 占比 ≥80%（7 次完成后统一判定）"
+      ],
+      "expected": {}
+    },
+    {
+      "id": "K3-CACHE-HIT-07",
+      "category": "缓存",
+      "priority": "P0",
+      "name": "90% 稳定前缀命中探测第 7 次",
+      "request": {
+        "phase": "probe",
+        "wait_seconds": 0,
+        "warm_input_tokens_target": 70000,
+        "same_prefix_byte_exact": true,
+        "append_tail": true,
+        "repetition": 7,
+        "batch": "CACHE-HIT-7"
+      },
+      "assertions": [
+        "warm 请求已完成且稳定前缀 byte-exact 保持不变",
+        "记录每次 probe 的 prompt_tokens 与 cached_tokens（缺字段按未命中计）",
+        "保存本次 warm/probe 关联信息",
+        "该档命中率：cached_tokens / prompt_tokens ≥80% 的 probe 占比 ≥80%（7 次完成后统一判定）"
+      ],
+      "expected": {}
+    },
+    {
+      "id": "K3-CACHE-TTL-01",
+      "category": "缓存",
+      "priority": "P0",
+      "name": "30 秒 TTL 命中探测第 1 次",
+      "request": {
+        "phase": "probe",
+        "wait_seconds": 30,
+        "warm_input_tokens_target": 70000,
+        "same_prefix_byte_exact": true,
+        "append_tail": true,
+        "repetition": 1,
+        "batch": "CACHE-TTL-3"
+      },
+      "assertions": [
+        "warm 后精确等待 30 秒再发起 probe",
+        "稳定前缀 byte-exact 保持不变",
+        "保存时间戳、等待时长和 usage",
+        "该档命中率：30 秒后 cached_tokens / prompt_tokens ≥80% 的 probe 占比 ≥80%（3 次完成后统一判定）"
+      ],
+      "expected": {}
+    },
+    {
+      "id": "K3-CACHE-TTL-02",
+      "category": "缓存",
+      "priority": "P0",
+      "name": "30 秒 TTL 命中探测第 2 次",
+      "request": {
+        "phase": "probe",
+        "wait_seconds": 30,
+        "warm_input_tokens_target": 70000,
+        "same_prefix_byte_exact": true,
+        "append_tail": true,
+        "repetition": 2,
+        "batch": "CACHE-TTL-3"
+      },
+      "assertions": [
+        "warm 后精确等待 30 秒再发起 probe",
+        "稳定前缀 byte-exact 保持不变",
+        "保存时间戳、等待时长和 usage",
+        "该档命中率：30 秒后 cached_tokens / prompt_tokens ≥80% 的 probe 占比 ≥80%（3 次完成后统一判定）"
+      ],
+      "expected": {}
+    },
+    {
+      "id": "K3-CACHE-TTL-03",
+      "category": "缓存",
+      "priority": "P0",
+      "name": "30 秒 TTL 命中探测第 3 次",
+      "request": {
+        "phase": "probe",
+        "wait_seconds": 30,
+        "warm_input_tokens_target": 70000,
+        "same_prefix_byte_exact": true,
+        "append_tail": true,
+        "repetition": 3,
+        "batch": "CACHE-TTL-3"
+      },
+      "assertions": [
+        "warm 后精确等待 30 秒再发起 probe",
+        "稳定前缀 byte-exact 保持不变",
+        "保存时间戳、等待时长和 usage",
+        "该档命中率：30 秒后 cached_tokens / prompt_tokens ≥80% 的 probe 占比 ≥80%（3 次完成后统一判定）"
+      ],
+      "expected": {}
+    }
+  ],
+  "excluded_open_source_evaluations": [
+    "arxivmath",
+    "DeepSWE",
+    "Swe-atlas-tw",
+    "Swe-atlas-rf",
+    "Legal Agent Benchmark"
+  ],
+  "admission_checklist": [
+    {
+      "id": "A01",
+      "check": "基础连通",
+      "pass": "K3-CONN-001/002 通过"
+    },
+    {
+      "id": "A02",
+      "check": "协议与行为兼容",
+      "pass": "P0 兼容性案例全部通过；不做供应商侧静默参数改写"
+    },
+    {
+      "id": "A03",
+      "check": "TTFT/TPOT",
+      "pass": "16K/64K/100K/200K 各 10 次；TTFT avg 不超过对应达标线，TPOT 三项均达标"
+    },
+    {
+      "id": "A04",
+      "check": "缓存",
+      "pass": "90% 前缀重复命中率≥80%，且 warm 后 30 秒仍命中≥80%；命中率按 probe 占比计（单次 cached_tokens / prompt_tokens ≥80% 记为一次命中）"
+    },
+    {
+      "id": "A05",
+      "check": "额度与支持",
+      "pass": "测试账户余额≥10000 元、TPM≥5M、工作时间 30 分钟内响应；由商务/供应商人工确认"
+    }
+  ],
+  "execution_policy": {
+    "functional_cases": 18,
+    "ttft_cases": 30,
+    "tpot_cases": 10,
+    "cache_cases": 10,
+    "total_atomic_cases": 68,
+    "note": "性能与缓存已按实际请求拆分为原子测试案例；10 次是 10 条独立请求，不再只显示为一个聚合项。"
+  }
+}

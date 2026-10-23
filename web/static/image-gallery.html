@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>生成图片 · {title}</title>
+  <link rel="stylesheet" href="/image-gallery.css">
+</head>
+<body>
+  <main>
+    <header class="gallery-header">
+      <span class="eyebrow">生成结果</span>
+      <h1>生成图片</h1>
+      <p class="gallery-title">{title}</p>
+      <p class="gallery-meta">{created_at} · 记录 ID：{record_id}</p>
+      <p class="gallery-count">共 {count} 张图片，按顺序逐张展示</p>
+    </header>
+    <section class="gallery-images" aria-label="生成的图片">
+      {content}
+    </section>
+  </main>
+</body>
+</html>

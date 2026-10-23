@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>模型测试平台</title>
+<script>
+// 在首帧绘制前恢复主题；偏好独立于测试表单与凭据。
+(function(){let theme;try{theme=localStorage.getItem('ml-test-platform.theme.v1')}catch(e){}
+if(theme!=='light'&&theme!=='dark')theme=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';
+document.documentElement.dataset.theme=theme;})();
+</script>
+<link rel="stylesheet" href="/app.css" />
+</head><body><!-- 兼容历史页面检测：性能测试台 -->
+<header class="topbar"><a class="brand" href="#test"><span class="brand-mark">M</span><b>模型测试平台</b></a>
+<nav aria-label="主导航"><button id="testNav" data-page="test" class="active">测试</button><button id="reportsNav" data-page="reports">报告</button></nav>
+<div class="top-actions"><span id="serviceState" class="service"><i></i>服务在线</span><button id="themeToggle" type="button" aria-label="切换主题">切换主题</button><button id="refreshBtn" class="icon-btn" title="刷新记录" aria-label="刷新记录">↻</button></div></header>
+<main><div id="testPage"><div class="page-title"><div><span class="eyebrow">TEST</span><h1>配置好，直接测。</h1><p>配置接口、选择测试、调整参数，在这一页完成。</p></div><button class="text-btn" data-page="reports">查看测试报告 ↗</button></div><form id="runForm" autocomplete="off" data-form-type="other">
+        <section class="box connection"><div class="box-head"><h2>接口配置</h2><div class="connection-actions"><span>填写接口，选择测试后直接运行</span></div></div><div class="connection-fields"><div class="protocol-picker">
+          <label><span>API 协议 / 接口</span><select id="protocolSelect" required aria-describedby="protocolDescription"><option>正在载入协议…</option></select></label>
+          <label id="customPathField" style="display:none"><span>自定义请求路径</span><input id="customPath" type="text" placeholder="例如 /api/v3/contents/generations/tasks" autocomplete="off" autocapitalize="off" spellcheck="false" /><small class="field-hint">填到根前缀即可，操作后缀（如 /chat/completions、/contents/generations/tasks）会自动拼接；填完整路径时系统会自动剥掉已知操作后缀。仅覆盖请求路径，鉴权与报文格式仍按上方所选协议。</small></label>
+          <small id="protocolDescription" class="field-hint">请选择实际请求协议</small>
+        </div>
+        <div class="field-grid">
+          <label><span>BASE URL（仅域名）</span><input id="baseUrl" required type="url" placeholder="https://mux.la" autocomplete="url" /><small id="endpointPreview" class="field-hint endpoint-preview">选择协议后自动拼装请求路径</small></label>
+
+          <label class="key-field"><span>API KEY</span><div class="input-wrap"><input id="apiKey" name="api_access_token" required type="text" class="secret-masked" placeholder="输入 API Key（保存在当前浏览器）" autocomplete="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other" /><button type="button" id="toggleKey">显示</button></div><small class="field-hint">保存在当前浏览器本地存储，不写入测试记录；刷新页面后自动恢复</small></label>
+          <label class="connection-model-field"><span>MODEL / ENDPOINT ID</span><div class="model-controls"><div class="model-combobox"><div class="model-row"><input id="model" aria-label="模型 ID" name="model_identifier" required type="text" placeholder="例如 ep-2026xxxx" autocomplete="off" autocapitalize="off" spellcheck="false" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="modelSuggestions" /></div><div id="modelSuggestions" class="model-suggestions" role="listbox" aria-label="匹配的模型"></div></div><button type="button" id="queryModels">查询模型</button></div><small class="field-hint">输入模型 ID，或从查询结果中选择</small></label>
+        </div>
+
+        </div><small id="modelHint" class="field-hint" aria-live="polite">填写接口后查询可用模型，在下方勾选测试模型</small></section><section class="box tests"><div class="section-heading compact"><div><span class="step">02</span><h2>选择测试</h2><button type="button" id="connectivityBtn" class="connectivity-btn"><i></i><span>测试连通性</span></button></div><div class="mode-toggle"><input id="quick" type="checkbox"/><label for="quick">快速验证模式</label></div></div>
+        <div id="connectivityResult" class="connectivity-result" aria-live="polite"></div>
+        <div class="test-kind-tabs collapsed" id="kindTabs"><button type="button" class="kind-tab active" data-kind="load"><b>多轮压测</b><small>并发、延迟、吞吐和容量</small></button><button type="button" class="kind-tab" data-kind="kvv"><b>Kimi 测试</b><small>官方 KVV 验真 + K3 临时案例集</small></button><button type="button" class="kind-tab" data-kind="deepseek"><b>DeepSeek V4</b><small>Pro / Flash 专属能力验真</small></button><button type="button" class="kind-tab" data-kind="glm"><b>GLM 5.3</b><small>思考、结构化输出、Agent 能力与满血指纹</small></button><button type="button" class="kind-tab" data-kind="qwen"><b>千问测试</b><small>Qwen 3.6 / 3.7 / 3.8 · 混合思考（enable_thinking / thinking_budget）· 工具调用 · 档位指纹 · 图像理解</small></button><button type="button" class="kind-tab" data-kind="gpt"><b>GPT 测试</b><small>GPT-5.6 / GPT-6.1 · Responses API · 推理 · 工具与指纹验真</small></button><button type="button" class="kind-tab" data-kind="fable"><b>Claude 测试</b><small>Messages API · Fable 5 / Opus 5 / Sonnet 5 / Haiku 4.5 / Sonnet 4.6 · 计费探针</small></button><button type="button" class="kind-tab" data-kind="gemini"><b>Gemini 测试</b><small>原生 generateContent · Gemini 3.8 Flash / 3.1 Pro · 思考档位 · 多模态 · 工具与指纹验真</small></button><button type="button" class="kind-tab" data-kind="gpt-image"><b>GPT 图片压测</b><small>gpt-image-2 · gpt-image-2.5</small></button><button type="button" class="kind-tab" data-kind="gemini-image"><b>Gemini 图片测试</b><small>Gemini 3.x 图像生成 / 编辑</small></button><button type="button" class="kind-tab" data-kind="seedance"><b>视频生成</b><small>Seedance · 生成方式（文生 / 参考图 / 参考视频 / 两者都带）· 分辨率与时长 · 原生音频与水印</small></button><button type="button" class="kind-tab" data-kind="open-source"><b>开源测试集</b><small>ArXivMath · DeepSWE · SWE-Atlas TW · SWE-Atlas RF · Legal Agent Benchmark</small></button><button type="button" class="kind-tab" data-kind="moderation"><b>内容审核测试</b><small>关键词边界与虚拟伴侣场景</small></button><button type="button" class="kind-tab" data-kind="chat"><b>对话窗口</b><small>自由输入一条消息 · 完整响应原样返回并归档</small></button><button type="button" class="kind-tab" data-kind="forensics"><b>中转验真</b><small>隐式身份指纹 · 图像内容理解 · 错误信封泄露（跨模型取证）</small></button><button type="button" id="kindTabsToggle" class="kind-tabs-toggle" aria-expanded="false">展开更多场景 ▾</button></div>
+        <div class="test-workspace">
+          <aside class="test-catalog" aria-label="测试项列表"><div class="test-catalog-heading"><h3>测试项</h3><span id="testCaseCount" aria-live="polite"></span></div><p>点整行加入或移出，点「详情」查看配置</p>
+            <div class="test-presets"><details class="test-presets-disclosure"><summary><span id="casePresetHeading">常用组合</span><span class="test-presets-expand">展开</span><span class="test-presets-collapse">收起</span></summary><div id="casePresets" class="test-preset-options" role="group" aria-label="常用测试组合"></div><p id="casePresetStatus" class="test-preset-status" aria-live="polite"></p></details><button type="button" id="clearCaseSelection">清空</button></div>
+            <div id="caseGrid" class="test-case-list"><div class="loading">正在载入测试场景…</div></div>
+            <div class="launch-footer">
+          <button id="submitBtn" class="primary" type="submit"><span>启动测试</span><b>→</b></button>
+          <p id="formMessage" class="message" aria-live="polite"></p>
+        </div>
+          </aside>
+          <section class="test-detail" aria-label="测试项详情与配置">
+            <div id="caseDetail"><p class="empty">在左侧选择测试项，查看详情和配置。</p></div>
+            <div class="test-variant-controls">
+        <div class="image-config panel-inline" id="gptVariantConfig" style="display:none">
+          <div><span>GPT 档位</span><details class="field-notes"><summary>说明</summary><small>三个档位的契约互不相同：GPT-6.1 与 GPT-6 Astra 已移除 none/minimal、工具面只在 Responses API；GPT-6 Sol / Luna 支持 none，且 Chat 函数调用仅在 effort=none 下可用。切换档位后下方用例列表与判定口径随之切换，档位相关判据按被测模型自动解析；MODEL 输入框填入默认 ID，可手动覆盖为网关别名。</small></details></div>
+          <label>档位组<select id="gptVariantSelect" aria-label="GPT 档位组选择"><option value="gpt5.6">GPT-5.6</option><option value="gpt6.1">GPT-6.1</option><option value="gpt6">GPT-6 家族</option></select></label>
+          <label>具体模型<select id="gptModelSelect" aria-label="GPT 具体模型选择"></select></label>
+          <div class="pelican-config" id="gptPelicanConfig" style="display:none">
+            <label>请求轮数<input id="gptRequests" type="number" min="1" max="200" step="1" value="1" /></label>
+            <label>并发数<input id="gptConcurrency" type="number" min="1" max="32" step="1" value="1" /></label>
+            <small>仅对已选中的「鹈鹕骑车 SVG 生成」生效：同一句提示词重复执行 N 轮（并发同时发出），逐轮产物落盘到同一结果目录——pelican.html 是各轮渲染视图的总览页，各轮原始 SVG 为 pelican-&lt;轮次&gt;.svg。判据跨轮一致：只要有一轮拿到 200 却没产出完整 SVG 就判失败。</small>
+          </div>
+        </div>
+        <div class="image-config panel-inline" id="claudeVariantConfig" style="display:none">
+          <div><span>Claude 模型</span><details class="field-notes"><summary>说明</summary><small>切换模型后，下方用例列表会切换为该模型对应用例；MODEL 输入框会填入该模型的默认 ID，可手动覆盖为网关别名。</small></details></div>
+          <label>模型<select id="claudeVariantSelect" aria-label="Claude 模型选择"><option value="fable5">Fable 5 · claude-fable-5</option><option value="opus5">Opus 5 · claude-opus-5</option><option value="sonnet5">Sonnet 5 · claude-sonnet-5</option><option value="haiku45">Haiku 4.5 · claude-haiku-4-5</option><option value="sonnet46">Sonnet 4.6 · claude-sonnet-4-6</option></select></label>
+        </div>
+        <div class="image-config panel-inline" id="geminiVariantConfig" style="display:none">
+          <div><span>Gemini 模型</span><details class="field-notes"><summary>说明</summary><small>Gemini 3.x 用 <code>thinkingConfig.thinkingLevel</code> 取代数值型 <code>thinkingBudget</code>：3.8 Flash 为 LOW/MEDIUM/HIGH（默认 MEDIUM，<b>不含</b> MINIMAL，且不接受 <code>frequency_penalty</code> / <code>presence_penalty</code> / <code>candidate_count</code>）；3.1 Pro 默认 HIGH 且支持 <code>candidate_count</code>。切换模型后下方用例列表与判定口径随之切换，档位相关判据按被测模型自动解析；MODEL 输入框会填入该模型默认 ID，可手动覆盖为网关别名。</small></details></div>
+          <label>模型<select id="geminiModelSelect" aria-label="Gemini 模型选择"></select></label>
+        </div>
+        <div class="image-config panel-inline" id="qwenModelConfig" style="display:none">
+          <div><span>千问模型</span><details class="field-notes"><summary>说明</summary><small>Qwen 3.6 / 3.7 / 3.8 系列是混合思考模型（默认开启思考）：下方用例共用同一批，档位相关判据按被测型号由后端矩阵解析。视觉卡片只对有图像输入的型号有意义，纯文本档位被接口拒绝时记「未验证」而不是失败。<b>切换模型</b>只改 MODEL 输入框的默认值，不改用例列表；MODEL 可手动覆盖为网关别名。</small></details></div>
+          <label>模型<select id="qwenModelSelect" aria-label="千问模型选择"></select></label>
+        </div>
+            </div>
+            <section class="test-model-config" aria-label="本次测试模型"><div class="test-config-heading"><h3>测试模型</h3><span id="testModelMode">选择一个模型</span></div>
+
+              <input id="testModelSearch" type="search" placeholder="筛选已查询的模型" aria-label="筛选测试模型" autocomplete="off" hidden />
+              <div id="testModelOptions" class="test-model-options" role="group" aria-label="勾选测试模型"></div>
+              <p id="testModelNote" class="test-config-note"></p>
+            </section>
+            <div id="testExecutionConfigs">
+        <div class="image-config panel-inline" id="imageConfig" style="display:none">
+          <div><span>图片随机参数</span><details class="field-notes"><summary>说明</summary><small>下方多选项会在每个请求中随机抽取；未选项不会出现在本轮压测。</small></details></div>
+          <div class="multi-choice-field"><span>QUALITY</span><select id="imageQuality" multiple aria-label="图片质量" hidden></select><div class="multi-choice-options" data-multi-select="imageQuality" role="group" aria-label="图片质量"></div></div>
+          <label>MODEL<select id="imageModels" multiple aria-label="图片模型"></select></label>
+          <div class="multi-choice-field"><span>SIZE</span><select id="imageSizes" multiple aria-label="图片尺寸" hidden></select><div class="multi-choice-options" data-multi-select="imageSizes" role="group" aria-label="图片尺寸"></div></div>
+          <div class="image-aspect-field">
+            <label class="custom-toggle"><input id="imageAspectEnabled" type="checkbox"><span>启用 aspect_ratio</span></label>
+            <select id="imageAspectRatio" aria-label="图片画面比例 aspect_ratio" disabled></select>
+          </div>
+        </div>
+        <div class="image-config panel-inline" id="geminiImageConfig" style="display:none">
+          <div><span>Gemini 图像随机参数</span><details class="field-notes"><summary>说明</summary><small>下方多选项会在每个请求中随机抽取；未选项不会出现在本轮测试。强度 = 分辨率档位（imageSize），尺寸 = 画面比例（aspectRatio），生成数量 = 单次候选张数（candidateCount）。</small></details></div>
+          <div class="multi-choice-field"><span>强度</span><select id="geminiQuality" multiple aria-label="Gemini 图像强度（分辨率）" hidden></select><div class="multi-choice-options" data-multi-select="geminiQuality" role="group" aria-label="Gemini 图像强度（分辨率）"></div></div>
+          <label>MODEL<select id="geminiModels" multiple aria-label="Gemini 图像模型"></select></label>
+          <div class="multi-choice-field"><span>尺寸</span><select id="geminiAspects" multiple aria-label="Gemini 画面比例" hidden></select><div class="multi-choice-options" data-multi-select="geminiAspects" role="group" aria-label="Gemini 画面比例"></div></div>
+          <div class="multi-choice-field"><span>生成数量</span><select id="geminiCounts" multiple aria-label="Gemini 每次生成张数" hidden></select><div class="multi-choice-options" data-multi-select="geminiCounts" role="group" aria-label="Gemini 每次生成张数"></div></div>
+        </div>
+        <div class="chat-panel image-prompt-config" id="imagePromptConfig" style="display:none">
+          <div class="chat-head"><span>图片生成提示词</span><details class="field-notes"><summary>参数说明与判定规则</summary><small>填写后，每次生成都使用这段提示词；留空则随机使用默认提示词。</small></details></div>
+          <label class="chat-field"><span>图片提示词（可选）</span><textarea id="imagePrompt" rows="4" placeholder="例如：一只橘猫坐在窗边，柔和的晨光，写实摄影风格"></textarea></label>
+        </div>
+        <div class="video-config" id="seedanceConfig" style="display:none">
+          <div class="video-head"><span>Seedance 视频生成参数</span><details class="field-notes"><summary>参数说明与判定规则</summary><small>先选<strong>生成方式</strong>（仅文生视频 / 带参考图 / 带参考视频 / 两者都带），面板只展示该方式用得到的参数。走火山方舟异步任务面：先提交任务拿 task id，再轮询到终态（queued → running → succeeded / failed）；成功后视频下载归档，报告里给出可直接打开的链接。参考视频只有<strong>视频地址</strong>会随任务提交（该接口只接受 URL），本地上传的视频文件仅归档留痕。参数取值域由后端下发、前端只做一次预校验，服务端仍会二次校验；提示词逐字发送，不追加任何系统提示。<strong>注意</strong>：分辨率只支持 720p / 1080p / 4k（480p 属 1.0 系列，2.0/2.5 会被上游以「请求参数校验失败」拒绝），且该网关把参数校验放在异步执行阶段——档位写错不会在提交时报错，而是整条任务跑完才失败。</small></details></div>
+          <label class="video-field"><span>提示词（必填）</span><textarea id="seedancePrompt" rows="4" placeholder="例如：镜头缓慢推进，一只白鹭在清晨的浅滩上展翅起飞，光线柔和，电影质感"></textarea></label>
+          <div class="video-grid">
+            <label title="决定这批请求带不带图片 / 参考视频；未启用的输入不会进入请求体">生成方式<select id="seedanceMode" aria-label="视频生成方式"></select></label>
+            <label>分辨率<select id="seedanceResolution" aria-label="视频分辨率"></select></label>
+            <label>画面比例<select id="seedanceRatio" aria-label="视频画面比例"></select></label>
+            <label>时长（秒，2.0≤15 / 2.5≤30）<input id="seedanceDuration" type="number" min="4" max="30" step="1" value="5" /></label>
+            <label id="seedanceImageRoleRow" title="单图只支持 first_frame / reference_image（首尾帧需要两张图，当前输入面只提供一张）">图片位置<select id="seedanceImageRole" aria-label="上传图片在视频中的位置"></select></label>
+            <label id="seedanceVideoRoleRow">视频位置<select id="seedanceVideoRole" aria-label="参考视频在生成中的角色"></select></label>
+          </div>
+          <small id="seedanceModeHint" class="video-mode-hint"></small>
+          <div class="video-sources" id="seedanceSources">
+            <div class="video-source seedance-image-source">
+              <span class="video-source-label">上传图片（可选）</span>
+              <div class="video-file-row">
+                <input id="seedanceImageFile" type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/bmp" />
+                <button type="button" id="seedanceImageClear" class="video-clear">清除</button>
+              </div>
+              <small id="seedanceUploadState" class="video-source-hint">上传与图片地址二选一；两者都填时以上传的图片为准。</small>
+            </div>
+            <div class="video-source seedance-image-source">
+              <span class="video-source-label">图片地址（可选）</span>
+              <input id="seedanceImageUrl" type="text" placeholder="https://… 或 data:image/png;base64,…" autocomplete="off" spellcheck="false" />
+              <small class="video-source-hint">支持 https 链接或 base64 data URI。</small>
+            </div>
+            <div class="video-source seedance-video-source">
+              <span class="video-source-label">上传参考视频（可选）</span>
+              <div class="video-file-row">
+                <input id="seedanceVideoFile" type="file" accept="video/mp4,video/webm,video/quicktime,video/x-matroska,video/x-m4v" />
+                <button type="button" id="seedanceVideoClear" class="video-clear">清除</button>
+              </div>
+              <small id="seedanceVideoState" class="video-source-hint">仅归档留痕（复制进结果目录 inputs/ 并记 sha256），不会提交给上游。</small>
+            </div>
+            <div class="video-source seedance-video-source">
+              <span class="video-source-label">视频地址（可选）</span>
+              <input id="seedanceVideoUrl" type="text" placeholder="https://…（会随任务提交给上游）" autocomplete="off" spellcheck="false" />
+              <small class="video-source-hint">唯一会真正生效的参考视频输入；与本地文件同时填写时以地址为准。</small>
+            </div>
+          </div>
+          <div class="video-switches">
+            <label><input id="seedanceAudio" type="checkbox" checked /> <span>生成音频</span></label>
+            <label><input id="seedanceWatermark" type="checkbox" /> <span>添加水印</span></label>
+            <small class="video-source-hint">生成音频的官方默认是<strong>开启</strong>（关闭后为无声视频）；水印官方默认关闭，开启后为画面右下角标识。两个开关都会以布尔值显式提交。</small>
+          </div>
+        </div>
+        <div class="panel-inline" id="moderationConfig" style="display:none"><label>审核测试并发数<input id="moderationConcurrency" type="number" min="1" max="1000" step="1" value="4"></label><small>流式 / 非流式各占约一半；请求报错时自动指数退避，最多重试 5 次</small></div>
+        <div class="chat-panel" id="chatConfig" style="display:none">
+          <div class="chat-head"><span>对话窗口</span><details class="field-notes"><summary>参数说明与判定规则</summary><small>把下方内容原样发给所选模型（单次请求），完整响应回显并归档为一条测试记录：请求明细 / 摘要 / 报告 / 原文。判定只看「这次对话是否拿到正文」，不做模型能力判定。</small></details></div>
+          <label class="chat-field"><span>系统提示词（可选）</span><textarea id="chatSystem" rows="2" placeholder="留空则只发送下面的用户消息"></textarea></label>
+          <label class="chat-field"><span>用户消息</span><textarea id="chatPrompt" rows="6" placeholder="例如：你给我画一个鹈鹕骑自行车的 SVG，直接输出完整 SVG，不要 read，不要调用工具"></textarea></label>
+          <div class="chat-actions">
+            <label>最大输出 Token<input id="chatMaxTokens" type="number" min="1" max="128000" step="1" value="8192" /></label>
+            <label>温度<input id="chatTemperature" type="number" min="0" max="2" step="0.1" placeholder="默认" /></label>
+            <button type="button" id="chatSend">发送</button>
+            <button type="button" id="chatCopy">复制原文</button>
+            <button type="button" id="chatRaw">原文视图</button>
+          </div>
+          <div id="chatStatus" class="chat-status"></div>
+          <div id="chatResult" class="chat-result"></div>
+        </div>
+        <div class="panel-inline" id="signatureConfig" style="display:none">
+          <label>输出预算（max_tokens）<input id="signatureMaxTokens" type="number" min="1" max="64000" step="1" value="16000"></label>
+          <small>只对 Protobuf 签名两步校验生效。预算只是上限、不会因此多计费；给太小会让思考吃满上限、正文为零，被契约判成「文本内容为空」。thinking 档位按被测模型自动解析（4.5/4.6 系 enabled，5 系 adaptive+effort），无需手选。</small>
+        </div>
+        <div class="custom-load panel-inline" id="customLoad">
+          <div><label class="custom-toggle"><input id="customEnabled" type="checkbox"><span>启用自定义性能参数</span></label><small>关闭时使用测试项原有默认配置；开启后应用下方参数</small></div>
+          <label>发送请求数<input id="customRequests" type="number" min="1" max="100000" step="1"></label>
+          <label>并发数<input id="customConcurrency" type="number" min="1" max="1000" step="1"></label>
+          <label id="imageHoldField" style="display:none" title="勾选启用后在设定并发下持续压测该秒数，时间到即停止发送新请求；此时上方「发送请求数」退化为上限保险丝"><span class="custom-toggle"><input id="imageHoldEnabled" type="checkbox"><span>压测持续时长</span></span><input id="imageHoldSeconds" type="number" min="1" step="1" value="60" disabled aria-label="压测持续时长（秒）"></label>
+          <button type="button" id="resetCustom">恢复默认</button>
+        </div>
+
+            </div>
+            <div id="caseEvidence"></div>
+          </section>
+        </div>
+        </section></form>
+<div id="latestRun" class="latest-run" hidden aria-live="polite"></div></div>
+<div id="reportsPage" hidden><div class="page-title"><div><span class="eyebrow">REPORTS</span><h1>结果清楚，证据完整。</h1><p>选一条记录查看结论；原始指标、请求与产物都在同一页。</p></div><button class="button" data-page="test">← 返回测试</button></div>
+<div class="reports-layout"><section class="history">
+      <div class="section-heading"><div><h2>测试记录</h2></div><div class="history-actions"><button type="button" id="selectAllDownloads" class="link-btn">全选本页可下载</button><button type="button" id="downloadSelected" class="link-btn" disabled>下载选中（0）</button></div></div>
+      <div class="filters"><button class="filter active" data-filter="all">全部</button><button class="filter" data-filter="running">执行中</button><button class="filter" data-filter="completed">已完成</button><button class="filter" data-filter="failed">异常</button><span class="filter-divider"></span><span class="filter-label">评级</span><button class="filter cfilter active" data-conclusion="all">全部</button><button class="filter cfilter" data-conclusion="score_pass">可用及以上</button><button class="filter cfilter" data-conclusion="score_fail">不可用</button><button class="filter cfilter" data-conclusion="score_pending">待评分</button></div>
+      <label class="runs-search"><span>搜索记录</span><input id="runsSearch" type="search" placeholder="测试名称、记录 ID、模型、接口地址或创建时间" autocomplete="off" /></label>
+      <div class="table-wrap"><table><thead><tr><th class="select-col">选择</th><th>测试 / 创建时间</th><th>模型与地址</th><th>状态</th><th>结论</th><th>耗时</th><th>产物</th></tr></thead><tbody id="runRows"><tr><td colspan="7" class="empty">暂无测试记录</td></tr></tbody></table></div>
+      <nav class="runs-pagination" aria-label="测试记录分页"><div class="runs-page-size"><span id="runsPageInfo">0 条记录</span><label for="runsPageSize">每页</label><select id="runsPageSize" aria-label="每页显示条数"><option value="5">5</option><option value="10">10</option><option value="20" selected>20</option><option value="50">50</option></select></div><div><button type="button" class="link-btn" id="runsPrev" disabled>上一页</button><button type="button" class="link-btn" id="runsNext" disabled>下一页</button></div></nav>
+    </section>
+<section class="report-panel" aria-label="报告详情"><div id="reportDialog"><div class="dialog-head"><div><span id="dialogEyebrow">测试报告</span><h2 id="dialogTitle">选择一条测试记录</h2></div><div id="reportActions"></div></div>
+<div id="reportMeta"></div><nav id="reportTabs" aria-label="报告内容"></nav><div id="reportBody" class="report-body"><div class="empty">在左侧选择一条记录，查看报告与原始证据。</div></div></div></section></div></div></main>
+<div id="toast" class="toast" role="status"></div><script src="/capability-radar.js"></script><script src="/case-presets.js"></script><script src="/app.js"></script>
+</body></html>

@@ -1,0 +1,21 @@
+{
+  "repository": "https://github.com/MoonshotAI/Kimi-Vendor-Verifier",
+  "revision": "66092cf444c97356c0e11c5078c67116390615d9",
+  "revision_date": "2026-09-17",
+  "synced_at": "2026-10-22",
+  "local_patches": [
+    "tests/params/test_params.py",
+    "verify_params.py",
+    "tests/k3_features/test_response_format.py"
+  ],
+  "excluded": [
+    ".gitattributes",
+    "beam/data/"
+  ],
+  "prompt_token_data_sha256": {
+    "testdata/prompt_token_cases/cases.partial.jsonl": "ebfa207af74d904234e3230b59ce446880c2177e0d282b837d6f737ec0eadae9",
+    "testdata/prompt_token_cases/vision_cases.jsonl": "6b7957d3f5d9fbecb6fcaaf1a4f52c27e20c3ba4f373175ffffc984c4ed638d0",
+    "testdata/prompt_token_cases/cases.jsonl": "54a975699ae3a06d734d1737b6b80ce09ef3125ab0dfe03d860f8a9d3292c66d",
+    "testdata/prompt_token_cases/images/vision_fixture.png": "8c70666bd9c0765e2ecd802f9a2b31e924ec67ea072473daad0ff788d62fa473"
+  }
+}

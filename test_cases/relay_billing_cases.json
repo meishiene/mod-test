@@ -1,0 +1,147 @@
+{
+  "suite_id": "RELAY-BILLING-20261009",
+  "title": "中转计费临时案例集",
+  "version": "0.1-temp",
+  "source_document": "docs/中转计费临时用例设计.md（i-token.ai 计费异常报告）",
+  "scope": "只回答中转计费可信性：预扣是否按实际用量退回、上报 usage 是否真实、计费由下单上限还是真实生成量驱动、关掉 thinking 能否省钱；共 11 条原子探针。官方文档合规类差异（承诺的 400 未执行、端点命名、字段归一化）不在范围内，仅留痕",
+  "common": {
+    "endpoint": "POST /v1/messages（anthropic）或 POST /v1/chat/completions（openai）",
+    "default_protocol": "anthropic",
+    "protocols": [
+      "anthropic",
+      "openai"
+    ],
+    "balance_oracle": "优先 /dashboard/billing/{subscription,usage}；不可用时回退「故意超额下单读 403 文案里的剩余额度」（被拒请求不扣款）",
+    "evidence": [
+      "请求体",
+      "HTTP 状态码",
+      "完整响应原文",
+      "usage",
+      "余额读数与差分",
+      "request_id",
+      "耗时",
+      "断言结果"
+    ]
+  },
+  "cases": [
+    {
+      "id": "BILLING-S01",
+      "category": "基线",
+      "priority": "P0",
+      "name": "通道可用性与模型目录",
+      "assertions": [
+        "文本请求返回 200 且可见正文非空",
+        "模型目录可读时记录目标模型是否在列",
+        "通道不可达时收口 blocked，不产生计费结论"
+      ]
+    },
+    {
+      "id": "BILLING-U01",
+      "category": "用量真实性",
+      "priority": "P0",
+      "name": "usage 是否随 max_tokens 变化（上限因子）",
+      "assertions": [
+        "同一提示词、仅改下单上限，多档 output_tokens 应随真实生成量变化",
+        "output_tokens 精确等于 max_tokens 且自称自然结束时判 failed（账目由上限推导）",
+        "如实回显 stop_reason=max_tokens 只记 warning（属真实截断）"
+      ]
+    },
+    {
+      "id": "BILLING-U02",
+      "category": "用量真实性",
+      "priority": "P0",
+      "name": "usage 是否随真实输出长度变化（内容因子）",
+      "assertions": [
+        "同一上限下长答案的 output_tokens 应高于短答案",
+        "长答案被截断时不以下界反证，避免把真实截断误判为伪造"
+      ]
+    },
+    {
+      "id": "BILLING-U04",
+      "category": "用量真实性",
+      "priority": "P1",
+      "name": "input_tokens 是否随输入增长",
+      "assertions": [
+        "输入按阶梯增长时 input_tokens 单调增长",
+        "input_tokens 恒定不变时判 failed"
+      ]
+    },
+    {
+      "id": "BILLING-U05",
+      "category": "用量真实性",
+      "priority": "P1",
+      "name": "同请求重复调用 usage 是否稳定",
+      "assertions": [
+        "同请求重复调用 usage 落在合理波动范围内",
+        "完全恒定且与上限绑定时与 U01 结论互相印证"
+      ]
+    },
+    {
+      "id": "BILLING-U06",
+      "category": "成本可控",
+      "priority": "P1",
+      "name": "关思考是否降低用量（成本可控性）",
+      "assertions": [
+        "显式关闭思考后 usage 与可见输出的关系仍然自洽",
+        "关闭无效（仍按上限填满）时记 warning，说明小上限既不省钱又可能丢答案"
+      ]
+    },
+    {
+      "id": "BILLING-B01",
+      "category": "计费口径",
+      "priority": "P0",
+      "name": "计费驱动因子标定（上限因子 vs 内容因子）",
+      "assertions": [
+        "三点双因子标定：同内容比上限、同上限比内容，两因子不得互相污染",
+        "扣款只随下单上限走而不随答案长度走时判 failed（预扣按上限实收）",
+        "扣款只随真实生成量走时判 passed"
+      ]
+    },
+    {
+      "id": "BILLING-B02",
+      "category": "计费口径",
+      "priority": "P0",
+      "name": "预扣结算口径与释放时延（是否退回）",
+      "assertions": [
+        "下单冻结额应在结算后按实际用量退回",
+        "结算后多个时刻回读余额，观测冻结是否释放及释放时延",
+        "无可用余额读数时收口 blocked，不判 failed"
+      ]
+    },
+    {
+      "id": "BILLING-B03",
+      "category": "计费口径",
+      "priority": "P1",
+      "name": "同请求计费可重复性",
+      "assertions": [
+        "同请求重复下单的扣款应落在同一量级",
+        "扣款随每次下单上限跳变时与 B01 结论互相印证"
+      ]
+    },
+    {
+      "id": "BILLING-B04",
+      "category": "计费口径",
+      "priority": "P1",
+      "name": "额度不足时的门槛与小额请求可用性",
+      "assertions": [
+        "余额低于下单上限冻结额时的拒绝语义应可解释",
+        "余额已覆盖真实用量却因上限门槛被拒时，指出资金效率问题而非计费不实"
+      ]
+    },
+    {
+      "id": "BILLING-U03",
+      "category": "用量真实性",
+      "priority": "P0",
+      "name": "思考余量指纹（output−thinking 与正文矛盾）",
+      "depends_on": [
+        "BILLING-U01",
+        "BILLING-U02"
+      ],
+      "assertions": [
+        "output_tokens − thinking_tokens ≤ 2 却给出 ≥10 字符正文且自称自然结束 → 账目自相矛盾，判 failed",
+        "贴上上限却非 max_tokens 截断的饱和响应同样计入矛盾指纹",
+        "带思考明细的样本少于 3 条时只记 warning（样本不足）"
+      ]
+    }
+  ]
+}

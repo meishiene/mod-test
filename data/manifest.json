@@ -1,0 +1,42 @@
+{
+  "generator_version": 2,
+  "format": "deterministic-prompt-recipe-v1",
+  "seed_scheme": "k3-admission-v1:<dataset>:<index>",
+  "datasets": {
+    "I1": {
+      "path": "I1.jsonl.gz",
+      "target_prompt_tokens": 7500,
+      "records": 500,
+      "sha256_compressed_file": "d726e9da187e1ab321259cdffa2c95ac2d12c0a2d48f24b0ac7b09926c90584a",
+      "compressed_bytes": 22494
+    },
+    "I2": {
+      "path": "I2.jsonl.gz",
+      "target_prompt_tokens": 12000,
+      "records": 500,
+      "sha256_compressed_file": "20787b2b3c33df04cf5642d2c6554c476461f958e7a15256daddd1e509da519a",
+      "compressed_bytes": 22526
+    },
+    "I3": {
+      "path": "I3.jsonl.gz",
+      "target_prompt_tokens": 24000,
+      "records": 500,
+      "sha256_compressed_file": "fb57c379c9672b1979d66c4716c94f04284049848dfdd34da390096629e928c8",
+      "compressed_bytes": 22507
+    },
+    "I4": {
+      "path": "I4.jsonl.gz",
+      "target_prompt_tokens": 48000,
+      "records": 500,
+      "sha256_compressed_file": "1b15722fff121c4209d4e022ad9c0867f3e30f76c93538ec6eba652513530e0d",
+      "compressed_bytes": 22513
+    },
+    "C1": {
+      "path": "C1.jsonl.gz",
+      "target_prompt_tokens": 10000,
+      "records": 7300,
+      "sha256_compressed_file": "49b4744e3d8ac56d1ec7a1bebe1ca35220b56714fc806325b544f805649729ae",
+      "compressed_bytes": 326462
+    }
+  }
+}

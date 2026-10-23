@@ -1,0 +1,17 @@
+# Test platform runtime
+httpx[http2]>=0.28.1
+
+# Embedded official KVV test suite runtime
+openai>=2.14.0
+jsonschema>=4.25.1
+pytest>=8.0
+pytest-rerunfailures>=14.0
+pytest-xdist>=3.5
+Pillow
+# c2pa-python 0.38.1 未发布 Windows wheel（仅 mac/Linux），Windows 固定到 0.38.0；
+# 其它平台继续使用 >=0.38 的最新版本。上游恢复 Windows wheel 后可移除下面的固定。
+c2pa-python==0.38.0; platform_system == "Windows"
+c2pa-python>=0.38; platform_system != "Windows"
+
+# MathArena official ArXivMath dataset loader
+datasets>=3.5.0

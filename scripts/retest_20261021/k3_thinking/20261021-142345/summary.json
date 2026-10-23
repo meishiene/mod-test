@@ -1,0 +1,925 @@
+[
+ {
+  "case_id": "P0-default",
+  "http_status": 200,
+  "tokens": {
+   "prompt": 96,
+   "completion": 36,
+   "total": 132,
+   "reasoning": 21,
+   "text": 0,
+   "cached": 0
+  },
+  "timeline": {
+   "first_reasoning": 1209.5,
+   "first_content": 1570.1,
+   "first_any": 1209.5
+  },
+  "elapsed_ms": 1570.7,
+  "finish_reason": "stop",
+  "response_model": "moonshotai/kimi-k3",
+  "reasoning_chars": 59,
+  "content_chars": 4,
+  "expect": null,
+  "got": null,
+  "correct": null,
+  "content": "3071",
+  "request": {
+   "model": "kimi-k3",
+   "stream": true,
+   "stream_options": {
+    "include_usage": true
+   },
+   "messages": [
+    {
+     "role": "user",
+     "content": "只回复数字：3071 + 0 = ?"
+    }
+   ],
+   "max_tokens": 512
+  }
+ },
+ {
+  "case_id": "P0-disabled",
+  "http_status": 200,
+  "tokens": {
+   "prompt": 29,
+   "completion": 9,
+   "total": 38,
+   "reasoning": 0,
+   "text": 0,
+   "cached": 0
+  },
+  "timeline": {
+   "first_reasoning": null,
+   "first_content": 1373.9,
+   "first_any": 1373.9
+  },
+  "elapsed_ms": 1432.1,
+  "finish_reason": "stop",
+  "response_model": "moonshotai/kimi-k3",
+  "reasoning_chars": 0,
+  "content_chars": 4,
+  "expect": null,
+  "got": null,
+  "correct": null,
+  "content": "3071",
+  "request": {
+   "model": "kimi-k3",
+   "stream": true,
+   "stream_options": {
+    "include_usage": true
+   },
+   "messages": [
+    {
+     "role": "user",
+     "content": "只回复数字：3071 + 0 = ?"
+    }
+   ],
+   "max_tokens": 512,
+   "thinking": {
+    "type": "disabled"
+   }
+  }
+ },
+ {
+  "case_id": "P0-enabled-all",
+  "http_status": 200,
+  "tokens": {
+   "prompt": 96,
+   "completion": 55,
+   "total": 151,
+   "reasoning": 40,
+   "text": 0,
+   "cached": 0
+  },
+  "timeline": {
+   "first_reasoning": 1595.4,
+   "first_content": 2257.0,
+   "first_any": 1595.4
+  },
+  "elapsed_ms": 2260.0,
+  "finish_reason": "stop",
+  "response_model": "moonshotai/kimi-k3",
+  "reasoning_chars": 119,
+  "content_chars": 4,
+  "expect": null,
+  "got": null,
+  "correct": null,
+  "content": "3071",
+  "request": {
+   "model": "kimi-k3",
+   "stream": true,
+   "stream_options": {
+    "include_usage": true
+   },
+   "messages": [
+    {
+     "role": "user",
+     "content": "只回复数字：3071 + 0 = ?"
+    }
+   ],
+   "max_tokens": 512,
+   "thinking": {
+    "type": "enabled",
+    "keep": "all"
+   }
+  }
+ },
+ {
+  "case_id": "P0-enabled-none",
+  "http_status": 200,
+  "tokens": {
+   "prompt": 96,
+   "completion": 35,
+   "total": 131,
+   "reasoning": 20,
+   "text": 0,
+   "cached": 0
+  },
+  "timeline": {
+   "first_reasoning": 1596.8,
+   "first_content": 2031.4,
+   "first_any": 1596.8
+  },
+  "elapsed_ms": 2035.1,
+  "finish_reason": "stop",
+  "response_model": "moonshotai/kimi-k3",
+  "reasoning_chars": 63,
+  "content_chars": 4,
+  "expect": null,
+  "got": null,
+  "correct": null,
+  "content": "3071",
+  "request": {
+   "model": "kimi-k3",
+   "stream": true,
+   "stream_options": {
+    "include_usage": true
+   },
+   "messages": [
+    {
+     "role": "user",
+     "content": "只回复数字：3071 + 0 = ?"
+    }
+   ],
+   "max_tokens": 512,
+   "thinking": {
+    "type": "enabled",
+    "keep": "none"
+   }
+  }
+ },
+ {
+  "case_id": "P0-think-false",
+  "http_status": 400,
+  "tokens": {
+   "prompt": null,
+   "completion": null,
+   "total": null,
+   "reasoning": null,
+   "text": null,
+   "cached": null
+  },
+  "timeline": {
+   "first_reasoning": null,
+   "first_content": null,
+   "first_any": null
+  },
+  "elapsed_ms": 566.5,
+  "finish_reason": null,
+  "response_model": null,
+  "reasoning_chars": 0,
+  "content_chars": 0,
+  "expect": null,
+  "got": null,
+  "correct": null,
+  "content": "",
+  "request": {
+   "model": "kimi-k3",
+   "stream": true,
+   "stream_options": {
+    "include_usage": true
+   },
+   "messages": [
+    {
+     "role": "user",
+     "content": "只回复数字：3071 + 0 = ?"
+    }
+   ],
+   "max_tokens": 512,
+   "thinking": false
+  }
+ },
+ {
+  "case_id": "P1-zh",
+  "http_status": 200,
+  "tokens": {
+   "prompt": 128,
+   "completion": 4,
+   "total": 132,
+   "reasoning": 0,
+   "text": 0,
+   "cached": 0
+  },
+  "timeline": {
+   "first_reasoning": 1943.7,
+   "first_content": null,
+   "first_any": 1943.7
+  },
+  "elapsed_ms": 1944.2,
+  "finish_reason": "length",
+  "response_model": "moonshotai/kimi-k3",
+  "reasoning_chars": 3,
+  "content_chars": 0,
+  "expect": null,
+  "got": null,
+  "correct": null,
+  "content": "",
+  "request": {
+   "model": "kimi-k3",
+   "stream": true,
+   "stream_options": {
+    "include_usage": true
+   },
+   "messages": [
+    {
+     "role": "user",
+     "content": "北京是中华人民共和国的首都，位于华北平原的北部。故宫、天坛和长城是著名的历史遗迹。长江与黄河孕育了中华文明，两者流域面积广阔，人口稠密，农业与工业都很发达。"
+    }
+   ],
+   "max_tokens": 1
+  }
+ },
+ {
+  "case_id": "P1-en",
+  "http_status": 200,
+  "tokens": {
+   "prompt": 117,
+   "completion": 1,
+   "total": 118,
+   "reasoning": 1,
+   "text": 0,
+   "cached": 0
+  },
+  "timeline": {
+   "first_reasoning": 1593.6,
+   "first_content": null,
+   "first_any": 1593.6
+  },
+  "elapsed_ms": 1598.3,
+  "finish_reason": "length",
+  "response_model": "moonshotai/kimi-k3",
+  "reasoning_chars": 3,
+  "content_chars": 0,
+  "expect": null,
+  "got": null,
+  "correct": null,
+  "content": "",
+  "request": {
+   "model": "kimi-k3",
+   "stream": true,
+   "stream_options": {
+    "include_usage": true
+   },
+   "messages": [
+    {
+     "role": "user",
+     "content": "The quick brown fox jumps over the lazy dog. Tokenization fingerprinting works by comparing how many pieces a fixed string is split into under different vocabularies."
+    }
+   ],
+   "max_tokens": 1
+  }
+ },
+ {
+  "case_id": "P1-code",
+  "http_status": 200,
+  "tokens": {
+   "prompt": 122,
+   "completion": 1,
+   "total": 123,
+   "reasoning": 1,
+   "text": 0,
+   "cached": 64
+  },
+  "timeline": {
+   "first_reasoning": 1132.9,
+   "first_content": null,
+   "first_any": 1132.9
+  },
+  "elapsed_ms": 1138.2,
+  "finish_reason": "length",
+  "response_model": "moonshotai/kimi-k3",
+  "reasoning_chars": 3,
+  "content_chars": 0,
+  "expect": null,
+  "got": null,
+  "correct": null,
+  "content": "",
+  "request": {
+   "model": "kimi-k3",
+   "stream": true,
+   "stream_options": {
+    "include_usage": true
+   },
+   "messages": [
+    {
+     "role": "user",
+     "content": "def fib(n):\n    a, b = 0, 1\n    for _ in range(n):\n        a, b = b, a + b\n    return a\n"
+    }
+   ],
+   "max_tokens": 1
+  }
+ },
+ {
+  "case_id": "P1-mix",
+  "http_status": 200,
+  "tokens": {
+   "prompt": 119,
+   "completion": 1,
+   "total": 120,
+   "reasoning": 1,
+   "text": 0,
+   "cached": 64
+  },
+  "timeline": {
+   "first_reasoning": 2444.9,
+   "first_content": null,
+   "first_any": 2444.9
+  },
+  "elapsed_ms": 2448.2,
+  "finish_reason": "length",
+  "response_model": "moonshotai/kimi-k3",
+  "reasoning_chars": 3,
+  "content_chars": 0,
+  "expect": null,
+  "got": null,
+  "correct": null,
+  "content": "",
+  "request": {
+   "model": "kimi-k3",
+   "stream": true,
+   "stream_options": {
+    "include_usage": true
+   },
+   "messages": [
+    {
+     "role": "user",
+     "content": "中文与 English 混排，含数字 12345、符号 → ∑、emoji 🚀，以及罕见字 龘靐齉爩。"
+    }
+   ],
+   "max_tokens": 1
+  }
+ },
+ {
+  "case_id": "P2-self",
+  "http_status": 200,
+  "tokens": {
+   "prompt": 104,
+   "completion": 194,
+   "total": 298,
+   "reasoning": 174,
+   "text": 0,
+   "cached": 0
+  },
+  "timeline": {
+   "first_reasoning": 1254.3,
+   "first_content": 4089.6,
+   "first_any": 1254.3
+  },
+  "elapsed_ms": 4233.8,
+  "finish_reason": "stop",
+  "response_model": "moonshotai/kimi-k3",
+  "reasoning_chars": 606,
+  "content_chars": 9,
+  "expect": null,
+  "got": null,
+  "correct": null,
+  "content": "月之暗面\nKimi",
+  "request": {
+   "model": "kimi-k3",
+   "stream": true,
+   "stream_options": {
+    "include_usage": true
+   },
+   "messages": [
+    {
+     "role": "user",
+     "content": "你是哪家公司训练的什么模型？请只回答两行：公司名 / 模型名。"
+    }
+   ],
+   "max_tokens": 700
+  }
+ },
+ {
+  "case_id": "P2-cutoff",
+  "http_status": 200,
+  "tokens": {
+   "prompt": 96,
+   "completion": 700,
+   "total": 796,
+   "reasoning": 700,
+   "text": 0,
+   "cached": 0
+  },
+  "timeline": {
+   "first_reasoning": 1021.0,
+   "first_content": null,
+   "first_any": 1021.0
+  },
+  "elapsed_ms": 13944.6,
+  "finish_reason": "length",
+  "response_model": "moonshotai/kimi-k3",
+  "reasoning_chars": 2769,
+  "content_chars": 0,
+  "expect": null,
+  "got": null,
+  "correct": null,
+  "content": "",
+  "request": {
+   "model": "kimi-k3",
+   "stream": true,
+   "stream_options": {
+    "include_usage": true
+   },
+   "messages": [
+    {
+     "role": "user",
+     "content": "你的训练数据截止到什么时间？只回答年月。"
+    }
+   ],
+   "max_tokens": 700
+  }
+ },
+ {
+  "case_id": "P2-lineage",
+  "http_status": 200,
+  "tokens": {
+   "prompt": 109,
+   "completion": 700,
+   "total": 809,
+   "reasoning": 700,
+   "text": 0,
+   "cached": 0
+  },
+  "timeline": {
+   "first_reasoning": 1560.9,
+   "first_content": null,
+   "first_any": 1560.9
+  },
+  "elapsed_ms": 13518.7,
+  "finish_reason": "length",
+  "response_model": "moonshotai/kimi-k3",
+  "reasoning_chars": 2394,
+  "content_chars": 0,
+  "expect": null,
+  "got": null,
+  "correct": null,
+  "content": "",
+  "request": {
+   "model": "kimi-k3",
+   "stream": true,
+   "stream_options": {
+    "include_usage": true
+   },
+   "messages": [
+    {
+     "role": "user",
+     "content": "Kimi K2 是哪个团队发布的、总参数量与激活参数量各是多少？只回答这些事实。"
+    }
+   ],
+   "max_tokens": 700
+  }
+ },
+ {
+  "case_id": "P2-k3",
+  "http_status": 200,
+  "tokens": {
+   "prompt": 106,
+   "completion": 700,
+   "total": 806,
+   "reasoning": 700,
+   "text": 0,
+   "cached": 0
+  },
+  "timeline": {
+   "first_reasoning": 1541.1,
+   "first_content": null,
+   "first_any": 1541.1
+  },
+  "elapsed_ms": 12783.1,
+  "finish_reason": "length",
+  "response_model": "moonshotai/kimi-k3",
+  "reasoning_chars": 2743,
+  "content_chars": 0,
+  "expect": null,
+  "got": null,
+  "correct": null,
+  "content": "",
+  "request": {
+   "model": "kimi-k3",
+   "stream": true,
+   "stream_options": {
+    "include_usage": true
+   },
+   "messages": [
+    {
+     "role": "user",
+     "content": "Kimi K3 相比 K2 有哪些公开的技术变化？如果是你自己，请直接说明。"
+    }
+   ],
+   "max_tokens": 700
+  }
+ },
+ {
+  "case_id": "P3-mid-disabled",
+  "http_status": 200,
+  "tokens": {
+   "prompt": 51,
+   "completion": 8,
+   "total": 59,
+   "reasoning": 0,
+   "text": 0,
+   "cached": null
+  },
+  "timeline": {
+   "first_reasoning": null,
+   "first_content": 1200.7,
+   "first_any": 1200.7
+  },
+  "elapsed_ms": 1201.5,
+  "finish_reason": "stop",
+  "response_model": "moonshotai/kimi-k3",
+  "reasoning_chars": 0,
+  "content_chars": 2,
+  "expect": [
+   "25"
+  ],
+  "got": "25",
+  "correct": true,
+  "content": "25",
+  "request": {
+   "model": "kimi-k3",
+   "stream": true,
+   "stream_options": {
+    "include_usage": true
+   },
+   "messages": [
+    {
+     "role": "user",
+     "content": "甲比乙大 5 岁，乙比丙大 3 岁，三人年龄之和是 62。甲多少岁？只回复数字。"
+    }
+   ],
+   "max_tokens": 1536,
+   "thinking": {
+    "type": "disabled"
+   }
+  }
+ },
+ {
+  "case_id": "P3-mid-default",
+  "http_status": 200,
+  "tokens": {
+   "prompt": 118,
+   "completion": 77,
+   "total": 195,
+   "reasoning": 66,
+   "text": 0,
+   "cached": 64
+  },
+  "timeline": {
+   "first_reasoning": 1441.4,
+   "first_content": 4803.6,
+   "first_any": 1441.4
+  },
+  "elapsed_ms": 4804.3,
+  "finish_reason": "stop",
+  "response_model": "moonshotai/kimi-k3",
+  "reasoning_chars": 88,
+  "content_chars": 2,
+  "expect": [
+   "25"
+  ],
+  "got": "25",
+  "correct": true,
+  "content": "25",
+  "request": {
+   "model": "kimi-k3",
+   "stream": true,
+   "stream_options": {
+    "include_usage": true
+   },
+   "messages": [
+    {
+     "role": "user",
+     "content": "甲比乙大 5 岁，乙比丙大 3 岁，三人年龄之和是 62。甲多少岁？只回复数字。"
+    }
+   ],
+   "max_tokens": 1536
+  }
+ },
+ {
+  "case_id": "P3-hard-disabled",
+  "http_status": 200,
+  "tokens": {
+   "prompt": 49,
+   "completion": 8,
+   "total": 57,
+   "reasoning": 0,
+   "text": 0,
+   "cached": null
+  },
+  "timeline": {
+   "first_reasoning": null,
+   "first_content": 1286.7,
+   "first_any": 1286.7
+  },
+  "elapsed_ms": 1287.5,
+  "finish_reason": "stop",
+  "response_model": "moonshotai/kimi-k3",
+  "reasoning_chars": 0,
+  "content_chars": 3,
+  "expect": [
+   "266"
+  ],
+  "got": "266",
+  "correct": true,
+  "content": "266",
+  "request": {
+   "model": "kimi-k3",
+   "stream": true,
+   "stream_options": {
+    "include_usage": true
+   },
+   "messages": [
+    {
+     "role": "user",
+     "content": "1 到 1000（含）之间，有多少个整数不能被 2、3、5 中任何一个整除？只回复数字。"
+    }
+   ],
+   "max_tokens": 1536,
+   "thinking": {
+    "type": "disabled"
+   }
+  }
+ },
+ {
+  "case_id": "P3-hard-default",
+  "http_status": 200,
+  "tokens": {
+   "prompt": 116,
+   "completion": 143,
+   "total": 259,
+   "reasoning": 132,
+   "text": 0,
+   "cached": 64
+  },
+  "timeline": {
+   "first_reasoning": 959.9,
+   "first_content": 7676.3,
+   "first_any": 959.9
+  },
+  "elapsed_ms": 7677.5,
+  "finish_reason": "stop",
+  "response_model": "moonshotai/kimi-k3",
+  "reasoning_chars": 330,
+  "content_chars": 3,
+  "expect": [
+   "266"
+  ],
+  "got": "266",
+  "correct": true,
+  "content": "266",
+  "request": {
+   "model": "kimi-k3",
+   "stream": true,
+   "stream_options": {
+    "include_usage": true
+   },
+   "messages": [
+    {
+     "role": "user",
+     "content": "1 到 1000（含）之间，有多少个整数不能被 2、3、5 中任何一个整除？只回复数字。"
+    }
+   ],
+   "max_tokens": 1536
+  }
+ },
+ {
+  "case_id": "P3-trap-disabled",
+  "http_status": 200,
+  "tokens": {
+   "prompt": 44,
+   "completion": 8,
+   "total": 52,
+   "reasoning": 0,
+   "text": 0,
+   "cached": null
+  },
+  "timeline": {
+   "first_reasoning": null,
+   "first_content": 1944.1,
+   "first_any": 1944.1
+  },
+  "elapsed_ms": 1945.5,
+  "finish_reason": "stop",
+  "response_model": "moonshotai/kimi-k3",
+  "reasoning_chars": 0,
+  "content_chars": 2,
+  "expect": [
+   "12"
+  ],
+  "got": "12",
+  "correct": true,
+  "content": "12",
+  "request": {
+   "model": "kimi-k3",
+   "stream": true,
+   "stream_options": {
+    "include_usage": true
+   },
+   "messages": [
+    {
+     "role": "user",
+     "content": "笼子里有鸡和兔，共 35 个头、94 只脚。兔有多少只？只回复数字。"
+    }
+   ],
+   "max_tokens": 1536,
+   "thinking": {
+    "type": "disabled"
+   }
+  }
+ },
+ {
+  "case_id": "P3-trap-default",
+  "http_status": 200,
+  "tokens": {
+   "prompt": 111,
+   "completion": 121,
+   "total": 232,
+   "reasoning": 110,
+   "text": 0,
+   "cached": 64
+  },
+  "timeline": {
+   "first_reasoning": 1674.5,
+   "first_content": 6623.5,
+   "first_any": 1674.5
+  },
+  "elapsed_ms": 6624.5,
+  "finish_reason": "stop",
+  "response_model": "moonshotai/kimi-k3",
+  "reasoning_chars": 234,
+  "content_chars": 2,
+  "expect": [
+   "12"
+  ],
+  "got": "12",
+  "correct": true,
+  "content": "12",
+  "request": {
+   "model": "kimi-k3",
+   "stream": true,
+   "stream_options": {
+    "include_usage": true
+   },
+   "messages": [
+    {
+     "role": "user",
+     "content": "笼子里有鸡和兔，共 35 个头、94 只脚。兔有多少只？只回复数字。"
+    }
+   ],
+   "max_tokens": 1536
+  }
+ },
+ {
+  "case_id": "P3-prob-disabled",
+  "http_status": 200,
+  "tokens": {
+   "prompt": 54,
+   "completion": 10,
+   "total": 64,
+   "reasoning": 0,
+   "text": 0,
+   "cached": 0
+  },
+  "timeline": {
+   "first_reasoning": null,
+   "first_content": 1384.5,
+   "first_any": 1384.5
+  },
+  "elapsed_ms": 1477.6,
+  "finish_reason": "stop",
+  "response_model": "moonshotai/kimi-k3",
+  "reasoning_chars": 0,
+  "content_chars": 4,
+  "expect": [
+   "9/19"
+  ],
+  "got": "9/19",
+  "correct": true,
+  "content": "9/19",
+  "request": {
+   "model": "kimi-k3",
+   "stream": true,
+   "stream_options": {
+    "include_usage": true
+   },
+   "messages": [
+    {
+     "role": "user",
+     "content": "从 1 到 20 这 20 个整数里随机取两个不同的数，两数之和为偶数的概率是多少？只回复最简分数。"
+    }
+   ],
+   "max_tokens": 1536,
+   "thinking": {
+    "type": "disabled"
+   }
+  }
+ },
+ {
+  "case_id": "P3-prob-default",
+  "http_status": 200,
+  "tokens": {
+   "prompt": 121,
+   "completion": 132,
+   "total": 253,
+   "reasoning": 116,
+   "text": 0,
+   "cached": 0
+  },
+  "timeline": {
+   "first_reasoning": 2327.9,
+   "first_content": 4153.2,
+   "first_any": 2327.9
+  },
+  "elapsed_ms": 4155.6,
+  "finish_reason": "stop",
+  "response_model": "moonshotai/kimi-k3",
+  "reasoning_chars": 388,
+  "content_chars": 4,
+  "expect": [
+   "9/19"
+  ],
+  "got": "9/19",
+  "correct": true,
+  "content": "9/19",
+  "request": {
+   "model": "kimi-k3",
+   "stream": true,
+   "stream_options": {
+    "include_usage": true
+   },
+   "messages": [
+    {
+     "role": "user",
+     "content": "从 1 到 20 这 20 个整数里随机取两个不同的数，两数之和为偶数的概率是多少？只回复最简分数。"
+    }
+   ],
+   "max_tokens": 1536
+  }
+ },
+ {
+  "case_id": "P3b-disabled-cot",
+  "http_status": 200,
+  "tokens": {
+   "prompt": 57,
+   "completion": 329,
+   "total": 386,
+   "reasoning": 0,
+   "text": 0,
+   "cached": null
+  },
+  "timeline": {
+   "first_reasoning": null,
+   "first_content": 884.4,
+   "first_any": 884.4
+  },
+  "elapsed_ms": 18059.2,
+  "finish_reason": "stop",
+  "response_model": "moonshotai/kimi-k3",
+  "reasoning_chars": 0,
+  "content_chars": 629,
+  "expect": null,
+  "got": null,
+  "correct": null,
+  "content": "用容斥原理计算 1 到 1000 中不能被 2、3、5 中任何一个整除的整数个数。\n\n设：\n- A 是能被 2 整除的数\n- B 是能被 3 整除的数\n- C 是能被 5 整除的数\n\n单个集合大小：\n\n\\[\n|A|=\\left\\lfloor\\frac{1000}{2}\\right\\rfloor=500\n\\]\n\n\\[\n|B|=\\left\\lfloor\\frac{1000}{3}\\right\\rfloor=333\n\\]\n\n\\[\n|C|=\\left\\lfloor\\frac{1000}{5}\\right\\rfloor=200\n\\]\n\n两两交集：\n\n\\[\n|A\\cap B|=\\left\\lfloor\\frac{1000}{6}\\right\\rfloor=166\n\\]\n\n\\[\n|A\\cap C|=\\left\\lfloor\\frac{1000}{10}\\right\\rfloor=100\n\\]\n\n\\[\n|B\\cap C|=\\left\\lfloor\\frac{1000}{15}\\right\\rfloor=66\n\\]\n\n三者交集：\n\n\\[\n|A\\cap B\\cap C|=\\left\\lfloor\\frac{1000}{30}\\right\\rfloor=33\n\\]\n\n能被至少一个整除的数：\n\n\\[\n500+333+200-166-100-66+33=734\n\\]\n\n所以不能被 2、3、5 中任何一个整除的数有：\n\n\\[\n1000-734=266\n\\]\n\n266",
+  "request": {
+   "model": "kimi-k3",
+   "stream": true,
+   "stream_options": {
+    "include_usage": true
+   },
+   "messages": [
+    {
+     "role": "user",
+     "content": "1 到 1000（含）之间，有多少个整数不能被 2、3、5 中任何一个整除？只回复数字。 回答前请逐步详细推理。"
+    }
+   ],
+   "max_tokens": 1536,
+   "thinking": {
+    "type": "disabled"
+   }
+  }
+ }
+]

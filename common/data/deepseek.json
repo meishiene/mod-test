@@ -1,0 +1,9 @@
+{
+  "model_tokens": ["deepseek-v4", "deepseek-flash"],
+  "smoke_marker": "DS-CONTRACT-OK",
+  "thinking_on": {"thinking": {"type": "enabled"}},
+  "thinking_off": {"thinking": {"type": "disabled"}},
+  "tool_name": "lookup_order",
+  "supports_reasoning": true,
+  "reasoning_efforts": ["low", "medium", "high"]
+}

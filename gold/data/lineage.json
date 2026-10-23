@@ -1,0 +1,203 @@
+{
+  "schema": "gold/lineage@1",
+  "built_at": "2026-10-22T08:34:04+00:00",
+  "hf_endpoint": "https://huggingface.co",
+  "models": [
+    {
+      "slug": "qwen:qwen3-32b",
+      "vendor": "qwen",
+      "repo": "Qwen/Qwen3-32B",
+      "files": [
+        {
+          "filename": "tokenizer.json",
+          "source": "https://huggingface.co/Qwen/Qwen3-32B/blob/9216db5781bf21249d130ec9da846c4624c16137/tokenizer.json",
+          "revision": "9216db5781bf21249d130ec9da846c4624c16137",
+          "sha256": "aeb13307a71acd8fe81861d94ad54ab689df773318809eed3cbe794b4492dae4",
+          "bytes": 11422654
+        },
+        {
+          "filename": "config.json",
+          "source": "https://huggingface.co/Qwen/Qwen3-32B/blob/9216db5781bf21249d130ec9da846c4624c16137/config.json",
+          "revision": "9216db5781bf21249d130ec9da846c4624c16137",
+          "sha256": "97e295b63283935788fac5e4f8860862a56d4089538cafc93f0431f2ebe483bb",
+          "bytes": 728
+        }
+      ],
+      "errors": []
+    },
+    {
+      "slug": "qwen:qwen2.5-72b",
+      "vendor": "qwen",
+      "repo": "Qwen/Qwen2.5-72B-Instruct",
+      "files": [
+        {
+          "filename": "tokenizer.json",
+          "source": "https://huggingface.co/Qwen/Qwen2.5-72B-Instruct/blob/495f39366efef23836d0cfae4fbe635880d2be31/tokenizer.json",
+          "revision": "495f39366efef23836d0cfae4fbe635880d2be31",
+          "sha256": "c0382117ea329cdf097041132f6d735924b697924d6f6fc3945713e96ce87539",
+          "bytes": 7031645
+        },
+        {
+          "filename": "config.json",
+          "source": "https://huggingface.co/Qwen/Qwen2.5-72B-Instruct/blob/495f39366efef23836d0cfae4fbe635880d2be31/config.json",
+          "revision": "495f39366efef23836d0cfae4fbe635880d2be31",
+          "sha256": "14ca217334fe0fd10148413592d68c99eeb33431ed89c1afa130fee560be2a29",
+          "bytes": 663
+        }
+      ],
+      "errors": []
+    },
+    {
+      "slug": "deepseek:deepseek-v3.2",
+      "vendor": "deepseek",
+      "repo": "deepseek-ai/DeepSeek-V3.2-Exp",
+      "files": [
+        {
+          "filename": "tokenizer.json",
+          "source": "https://huggingface.co/deepseek-ai/DeepSeek-V3.2-Exp/blob/194c67e12b1b0d6df0ef373ddcf215bc84027409/tokenizer.json",
+          "revision": "194c67e12b1b0d6df0ef373ddcf215bc84027409",
+          "sha256": "32b34a41212e92f62e859cbbea121ae705a1fabbf157d9acf22d134ecd8dcf70",
+          "bytes": 7847578
+        },
+        {
+          "filename": "config.json",
+          "source": "https://huggingface.co/deepseek-ai/DeepSeek-V3.2-Exp/blob/194c67e12b1b0d6df0ef373ddcf215bc84027409/config.json",
+          "revision": "194c67e12b1b0d6df0ef373ddcf215bc84027409",
+          "sha256": "c7fa8b191e9936d8e6a57d864baab82b792fae16a116416cdd3a75ba76bc5af1",
+          "bytes": 1552
+        }
+      ],
+      "errors": []
+    },
+    {
+      "slug": "deepseek:deepseek-v3.1",
+      "vendor": "deepseek",
+      "repo": "deepseek-ai/DeepSeek-V3.1",
+      "files": [
+        {
+          "filename": "tokenizer.json",
+          "source": "https://huggingface.co/deepseek-ai/DeepSeek-V3.1/blob/c0781d039fb7a1ba2abc4add0bdc293e92d2b8db/tokenizer.json",
+          "revision": "c0781d039fb7a1ba2abc4add0bdc293e92d2b8db",
+          "sha256": "32b34a41212e92f62e859cbbea121ae705a1fabbf157d9acf22d134ecd8dcf70",
+          "bytes": 7847578
+        },
+        {
+          "filename": "config.json",
+          "source": "https://huggingface.co/deepseek-ai/DeepSeek-V3.1/blob/c0781d039fb7a1ba2abc4add0bdc293e92d2b8db/config.json",
+          "revision": "c0781d039fb7a1ba2abc4add0bdc293e92d2b8db",
+          "sha256": "3e5d192d745758862b0a3e6338ee181991db49933dbbd3185e1bde34944e7bad",
+          "bytes": 1686
+        }
+      ],
+      "errors": []
+    },
+    {
+      "slug": "glm:glm-4.6",
+      "vendor": "glm",
+      "repo": "zai-org/GLM-4.6",
+      "files": [
+        {
+          "filename": "tokenizer.json",
+          "source": "https://huggingface.co/zai-org/GLM-4.6/blob/be72194883d968d7923a07e2f61681ea9a2826d1/tokenizer.json",
+          "revision": "be72194883d968d7923a07e2f61681ea9a2826d1",
+          "sha256": "9340665016419c825c4bdabbcc9acc43b7ca2c68ce142724afa829abb1be5efd",
+          "bytes": 19970699
+        },
+        {
+          "filename": "config.json",
+          "source": "https://huggingface.co/zai-org/GLM-4.6/blob/be72194883d968d7923a07e2f61681ea9a2826d1/config.json",
+          "revision": "be72194883d968d7923a07e2f61681ea9a2826d1",
+          "sha256": "f713924a536ac1965d8af2a3144d3a0ce0acae94f0fbfd7407240cbafcb08c53",
+          "bytes": 1007
+        }
+      ],
+      "errors": []
+    },
+    {
+      "slug": "ernie:ernie-4.5-300b",
+      "vendor": "ernie",
+      "repo": "baidu/ERNIE-4.5-300B-A47B-PT",
+      "files": [
+        {
+          "filename": "tokenizer.json",
+          "source": "https://huggingface.co/baidu/ERNIE-4.5-300B-A47B-PT/blob/47bbaf1c9e356313c3cb2ded9078a494fb152f0e/tokenizer.json",
+          "revision": "47bbaf1c9e356313c3cb2ded9078a494fb152f0e",
+          "sha256": "4e5b4d49475d27c7ef7a61eea2d675f9cc013e91e3ddb5e06d964f5027c1814a",
+          "bytes": 11185815
+        },
+        {
+          "filename": "config.json",
+          "source": "https://huggingface.co/baidu/ERNIE-4.5-300B-A47B-PT/blob/47bbaf1c9e356313c3cb2ded9078a494fb152f0e/config.json",
+          "revision": "47bbaf1c9e356313c3cb2ded9078a494fb152f0e",
+          "sha256": "607db524c1233d2687e10df8cb049bcc781a5ba232ee3476553450cf9f5bba75",
+          "bytes": 935
+        }
+      ],
+      "errors": []
+    },
+    {
+      "slug": "minimax:minimax-m2",
+      "vendor": "minimax",
+      "repo": "MiniMaxAI/MiniMax-M2",
+      "files": [
+        {
+          "filename": "tokenizer.json",
+          "source": "https://huggingface.co/MiniMaxAI/MiniMax-M2/blob/757303d492a50514c312788b5247a4f696a4c6a3/tokenizer.json",
+          "revision": "757303d492a50514c312788b5247a4f696a4c6a3",
+          "sha256": "757622126525aeeb131756849d93298070ff3f0319c455ec8c5bb0f6b1cebbe8",
+          "bytes": 9730160
+        },
+        {
+          "filename": "config.json",
+          "source": "https://huggingface.co/MiniMaxAI/MiniMax-M2/blob/757303d492a50514c312788b5247a4f696a4c6a3/config.json",
+          "revision": "757303d492a50514c312788b5247a4f696a4c6a3",
+          "sha256": "03d0b726553f72ee799f30f52f77b9292b873714abda76ee7e2683953373db87",
+          "bytes": 2055
+        }
+      ],
+      "errors": []
+    },
+    {
+      "slug": "kimi:kimi-k2",
+      "vendor": "kimi",
+      "repo": "moonshotai/Kimi-K2-Instruct",
+      "files": [
+        {
+          "filename": "vendor_verifier/beam/tokenizer/tiktoken.model",
+          "source": "local-vendored",
+          "sha256": "b6c497a7469b33ced9c38afb1ad6e47f03f5e5dc05f15930799210ec050c5103",
+          "bytes": 2795286
+        },
+        {
+          "filename": "config.json",
+          "source": "local-vendored",
+          "sha256": "152d1604e108dba325e9cf94b6b3943e2ff82dbbb9fd304ac1e5c9548e16d469",
+          "bytes": 5351
+        }
+      ],
+      "errors": []
+    },
+    {
+      "slug": "doubao:seed-oss-36b",
+      "vendor": "doubao",
+      "repo": "ByteDance-Seed/Seed-OSS-36B-Instruct",
+      "files": [
+        {
+          "filename": "tokenizer.json",
+          "source": "https://huggingface.co/ByteDance-Seed/Seed-OSS-36B-Instruct/blob/497f1dca95ebdec98e41d517b9f060ee753c902f/tokenizer.json",
+          "revision": "497f1dca95ebdec98e41d517b9f060ee753c902f",
+          "sha256": "f6bd848f52451824a3033a9f1e67eea5b399a13c90f845a332d3a29537e05827",
+          "bytes": 11883696
+        },
+        {
+          "filename": "config.json",
+          "source": "https://huggingface.co/ByteDance-Seed/Seed-OSS-36B-Instruct/blob/497f1dca95ebdec98e41d517b9f060ee753c902f/config.json",
+          "revision": "497f1dca95ebdec98e41d517b9f060ee753c902f",
+          "sha256": "09f91799169531b687cbd15e6338aee6105fcbb058193c04faa7ae0344506132",
+          "bytes": 770
+        }
+      ],
+      "errors": []
+    }
+  ]
+}

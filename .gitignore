@@ -1,0 +1,29 @@
+.venv/
+# vendor_verifier 的 venv 现为指向 ./.venv 的软链（上面的 .venv/ 只匹配目录，软链需单独忽略）
+vendor_verifier/.venv
+__pycache__/
+*.pyc
+.env
+results/*
+!results/.gitkeep
+web/data/*.db
+web/data/*.db-*
+web/data/*.bak-*
+results/web-*.log
+docs/
+# 本地回滚检查点（临时快照，不入库）
+rollback-checkpoints/
+
+# 运行时数据与临时产物（不入库）
+tmp*/
+web/app.db
+web/data/
+
+# 本地图片产物输出目录（不入库）
+outputs/
+
+.DS_Store
+.pytest-tmp/
+
+# 原厂金标：官方 tokenizer/config 的下载缓存（83MB，可由 gold/data/lineage.json 原样重建）
+gold/.cache/
